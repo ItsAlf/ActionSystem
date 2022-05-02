@@ -16,28 +16,45 @@ UStatsComponent::UStatsComponent()
 
 void UStatsComponent::ModifyStatAdditive(FGameplayTag Stat, float Value)
 {
-	SetStatValue(Stat, GetStatValue(Stat) + Value);
+	if (Stats.Contains(Stat))
+	{
+		SetStatValue(Stat, GetStatValue(Stat) + Value);
+	}
 }
 
 void UStatsComponent::ModifyStatMultiplicative(FGameplayTag Stat, float Value)
 {
-	SetStatValue(Stat, GetStatValue(Stat) * Value);
+	if (Stats.Contains(Stat))
+	{
+		SetStatValue(Stat, GetStatValue(Stat) * Value);
+	}
 }
 
 float UStatsComponent::GetStatValue(FGameplayTag Stat)
 {
-	return Stats.FindByKey(Stat)->CurrentValue;
+	if (Stats.Contains(Stat))
+	{
+		return Stats.FindByKey(Stat)->CurrentValue;
+	}
+	return 0.0f;
 }
 
-FStat UStatsComponent::GetStat(FGameplayTag StatID)
+FStat UStatsComponent::GetStat(FGameplayTag Stat)
 {
-	return *Stats.FindByKey(StatID);
+	if (Stats.Contains(Stat))
+	{
+		return *Stats.FindByKey(Stat);
+	}
+	return FStat();
 }
 
 void UStatsComponent::SetStatValue(FGameplayTag Stat, float NewValue)
 {
-	OnStatChanged.Broadcast(Stat, NewValue, Stats.FindByKey(Stat)->CurrentValue);
-	Stats.FindByKey(Stat)->CurrentValue = FMath::Clamp(NewValue, NewValue, Stats.FindByKey(Stat)->MaxValue);
+	if (Stats.Contains(Stat))
+	{
+		OnStatChanged.Broadcast(Stat, NewValue, Stats.FindByKey(Stat)->CurrentValue);
+		Stats.FindByKey(Stat)->CurrentValue = FMath::Clamp(NewValue, NewValue, Stats.FindByKey(Stat)->MaxValue);
+	}
 }
 
 // Called when the game starts

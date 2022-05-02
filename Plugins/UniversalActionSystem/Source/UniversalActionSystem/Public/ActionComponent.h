@@ -34,6 +34,9 @@ public:
 	void RemoveAction(UActionBase* ActionToRemove);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void RemoveActionByClass(TSubclassOf<UActionBase> ActionToRemove);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	UActionBase* GetActionByName(FName ActionName);
 
 	/* Returns first occurrence of action matching the class provided */
@@ -70,6 +73,22 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
 	bool GetActionsInhibited();
 
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActionInputPressedByTag(FGameplayTag Tag);
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActionInputReleasedByTag(FGameplayTag Tag);
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActionInputPressedByClass(TSubclassOf<UActionBase> ActionClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActionInputReleasedByClass(TSubclassOf<UActionBase> ActionClass);
+
+
+
+	// Tag Stuff
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void AddActiveTag(FGameplayTag NewTag);
@@ -138,6 +157,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UActionBase* FindActionByClass(TSubclassOf<UActionBase> ActionClass);
+	UActionBase* FindActionByTag(FGameplayTag Tag);
 
 public:	
 

@@ -105,6 +105,15 @@ void UActionComponent::RemoveAction(UActionBase* ActionToRemove)
 	Actions.Remove(ActionToRemove);
 }
 
+void UActionComponent::RemoveActionByClass(TSubclassOf<UActionBase> ActionToRemove)
+{
+	UActionBase* FoundAction = FindActionByClass(ActionToRemove);
+	if (IsValid(FoundAction))
+	{
+		RemoveAction(FoundAction);
+	}
+}
+
 UActionBase* UActionComponent::GetActionByClass(TSubclassOf<UActionBase> ActionClass) const
 {
 	for (UActionBase* Action : Actions)
@@ -345,6 +354,38 @@ bool UActionComponent::GetActionsInhibited()
 	return bActionsInhibited;
 }
 
+void UActionComponent::ActionInputPressedByTag(FGameplayTag Tag)
+{
+	if (UActionBase* FoundAction = FindActionByTag(Tag))
+	{
+		FoundAction->OnInputPressed();
+	}
+}
+
+void UActionComponent::ActionInputReleasedByTag(FGameplayTag Tag)
+{
+	if (UActionBase* FoundAction = FindActionByTag(Tag))
+	{
+		FoundAction->OnInputReleased();
+	}
+}
+
+void UActionComponent::ActionInputPressedByClass(TSubclassOf<UActionBase> ActionClass)
+{
+	if (UActionBase* FoundAction = FindActionByClass(ActionClass))
+	{
+		FoundAction->OnInputPressed();
+	}
+}
+
+void UActionComponent::ActionInputReleasedByClass(TSubclassOf<UActionBase> ActionClass)
+{
+	if (UActionBase* FoundAction = FindActionByClass(ActionClass))
+	{
+		FoundAction->OnInputReleased();
+	}
+}
+
 void UActionComponent::AddActiveTag(FGameplayTag NewTag)
 {
 	ActiveGameplayTags.AddTag(NewTag);
@@ -453,6 +494,30 @@ void UActionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 
 	Super::EndPlay(EndPlayReason);
+}
+
+UActionBase* UActionComponent::FindActionByClass(TSubclassOf<UActionBase> ActionClass)
+{
+	for (UActionBase* Action : Actions)
+	{
+		if (Action && Action->IsA(ActionClass))
+		{
+			return Action;
+		}
+	}
+	return nullptr;
+}
+
+UActionBase* UActionComponent::FindActionByTag(FGameplayTag Tag)
+{
+	for (UActionBase* Action : Actions)
+	{
+		if (Action && Action->ActionTag.MatchesTagExact(Tag))
+		{
+			return Action;
+		}
+	}
+	return nullptr;
 }
 
 bool UActionComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)

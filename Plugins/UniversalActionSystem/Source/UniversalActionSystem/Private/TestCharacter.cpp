@@ -3,6 +3,7 @@
 
 #include "TestCharacter.h"
 #include "ActionComponent.h"
+#include "StatsComponent.h"
 
 // Sets default values
 ATestCharacter::ATestCharacter()
@@ -11,7 +12,18 @@ ATestCharacter::ATestCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	ActionComp = CreateDefaultSubobject<UActionComponent>("ActionComp");
+	StatsComponent = CreateDefaultSubobject<UStatsComponent>("StatsComponent");
 
+}
+
+UActionComponent* ATestCharacter::GetActionSystemComponent() const
+{
+	return ActionComp;
+}
+
+UStatsComponent* ATestCharacter::GetStatSystemComponent() const
+{
+	return StatsComponent;
 }
 
 // Called when the game starts or when spawned

@@ -98,7 +98,7 @@ public:
 	float GetStatValue(FGameplayTag Stat);
 
 	UFUNCTION(BlueprintCallable)
-	FStat GetStat(FGameplayTag StatID);
+	FStat GetStat(FGameplayTag Stat);
 
 protected:
 	// Called when the game starts

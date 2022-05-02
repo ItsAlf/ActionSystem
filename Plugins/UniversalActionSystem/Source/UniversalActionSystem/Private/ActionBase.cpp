@@ -4,10 +4,13 @@
 #include "ActionBase.h"
 #include "ActionComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Tasks/ActionTask.h"
 
 void UActionBase::Initialize(UActionComponent* NewActionComp)
 {
 	ActionComp = NewActionComp;
+	RepData.bIsRunning = false;
+	RepData.Instigator = NewActionComp->GetOwner();
 }
 
 UWorld* UActionBase::GetWorld() const
@@ -96,6 +99,11 @@ void UActionBase::OnGameplayTaskActivated(UGameplayTask& Task)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Running New GameplayTask"))
 	ActiveTasks.Add(&Task);
+	UActionTask* ActionTask = Cast<UActionTask>(&Task);
+	if (IsValid(ActionTask))
+	{
+		ActionTask->Action = this;
+	}
 	IGameplayTaskOwnerInterface::OnGameplayTaskActivated(Task);
 }
 

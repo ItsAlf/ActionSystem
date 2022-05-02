@@ -154,6 +154,12 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
 	void OnActionStopped(AActor* Instigator, bool bWasCanceled = false);
+	
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Action")
+	void OnInputReleased();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Action")
+	void OnInputPressed();
 
 	/* Action nickname to start/stop without a reference to the object */
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
