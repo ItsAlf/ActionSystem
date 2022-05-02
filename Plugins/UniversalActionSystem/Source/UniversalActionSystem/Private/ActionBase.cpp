@@ -144,7 +144,7 @@ void UActionBase::StartAction()
 	//LogOnScreen(this, FString::Printf(TEXT("Started: %s"), *ActionName.ToString()), FColor::Green);
 
 	UActionComponent* Comp = GetOwningComponent();	
-	Comp->ActiveGameplayTags.AppendTags(GrantsTags);
+	Comp->AddActiveTags(GrantsTags);
 
 	RepData.bIsRunning = true;
 	RepData.Instigator = GetOwner();
@@ -170,7 +170,7 @@ void UActionBase::StopAction()
 	//ensureAlways(bIsRunning);
 
 	UActionComponent* Comp = GetOwningComponent();
-	Comp->ActiveGameplayTags.RemoveTags(GrantsTags);
+	Comp->RemoveActiveTags(GrantsTags);
 
 	RepData.bIsRunning = false;
 	RepData.Instigator = GetOwner();
@@ -192,7 +192,7 @@ void UActionBase::CancelAction()
 	//ensureAlways(bIsRunning);
 
 	UActionComponent* Comp = GetOwningComponent();
-	Comp->ActiveGameplayTags.RemoveTags(GrantsTags);
+	Comp->RemoveActiveTags(GrantsTags);
 
 	RepData.bIsRunning = false;
 	RepData.Instigator = GetOwner();

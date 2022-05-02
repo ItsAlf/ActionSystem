@@ -12,7 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChange, FGameplayTag, Stat
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, meta = (ExposedAsyncProxy = AsyncTask))
 class UNIVERSALACTIONSYSTEM_API UTask_ListenForStatChange : public UBlueprintAsyncActionBase
 {
 	GENERATED_BODY()

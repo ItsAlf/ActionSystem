@@ -12,6 +12,7 @@ class UActionBase;
 class UActionComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStateChanged, UActionComponent*, OwningComp, UActionBase*, Action);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActiveTagsChanged, FGameplayTag, ChangedTag);
 
 UCLASS( ClassGroup=(ActionSystem), meta=(BlueprintSpawnableComponent) )
 class UNIVERSALACTIONSYSTEM_API UActionComponent : public UGameplayTasksComponent, public IActionSystemTagsInterface
@@ -68,6 +69,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
 	bool GetActionsInhibited();
+
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void AddActiveTag(FGameplayTag NewTag);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void AddActiveTags(FGameplayTagContainer NewTags);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	bool RemoveActiveTag(FGameplayTag TagToRemove);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void RemoveActiveTags(FGameplayTagContainer TagsToRemove);
+
+	
 
 	// Implement Custom Tags interface
 
@@ -130,6 +146,14 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnActionStateChanged OnActionStopped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActiveTagsChanged OnTagAdded;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActiveTagsChanged OnTagRemoved;
+
+	
 
 	bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 

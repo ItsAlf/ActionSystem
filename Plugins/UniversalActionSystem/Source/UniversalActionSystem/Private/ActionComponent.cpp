@@ -345,10 +345,49 @@ bool UActionComponent::GetActionsInhibited()
 	return bActionsInhibited;
 }
 
+void UActionComponent::AddActiveTag(FGameplayTag NewTag)
+{
+	ActiveGameplayTags.AddTag(NewTag);
+	OnTagAdded.Broadcast(NewTag);
+}
+
+void UActionComponent::AddActiveTags(FGameplayTagContainer NewTags)
+{
+	TArray<FGameplayTag> Tags;
+	NewTags.GetGameplayTagArray(Tags);
+	for (FGameplayTag CurrentTag : Tags)
+	{
+		OnTagAdded.Broadcast(CurrentTag);
+	}
+	ActiveGameplayTags.AppendTags(NewTags);
+}
+
+bool UActionComponent::RemoveActiveTag(FGameplayTag TagToRemove)
+{
+	if (ActiveGameplayTags.HasTag(TagToRemove))
+	{
+		ActiveGameplayTags.RemoveTag(TagToRemove);
+		OnTagRemoved.Broadcast(TagToRemove);
+		return true;
+	}
+	return false;
+}
+
 void UActionComponent::ServerStartAction_Implementation(FGameplayTag ActionTag)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Server Starting action..."))
 	StartActionByTag(ActionTag);
+}
+
+void UActionComponent::RemoveActiveTags(FGameplayTagContainer TagsToRemove)
+{
+	TArray<FGameplayTag> Tags;
+	TagsToRemove.GetGameplayTagArray(Tags);
+	for (FGameplayTag CurrentTag : Tags)
+	{
+		OnTagRemoved.Broadcast(CurrentTag);
+	}
+	ActiveGameplayTags.RemoveTags(TagsToRemove);
 }
 
 void UActionComponent::ServerStopAction_Implementation(FGameplayTag ActionTag)
@@ -373,12 +412,12 @@ bool UActionComponent::HasMatchingGameplayTag_Implementation(FGameplayTag Tag)
 
 void UActionComponent::AppendTags_Implementation(FGameplayTagContainer TagsToAdd)
 {
-	ActiveGameplayTags.AppendTags(TagsToAdd);
+	AddActiveTags(TagsToAdd);
 }
 
 void UActionComponent::AddTag_Implementation(FGameplayTag TagToAdd)
 {
-	ActiveGameplayTags.AddTag(TagToAdd);
+	AddActiveTag(TagToAdd);
 }
 
 void UActionComponent::RemoveTags_Implementation(FGameplayTagContainer TagsToRemove)
@@ -388,7 +427,7 @@ void UActionComponent::RemoveTags_Implementation(FGameplayTagContainer TagsToRem
 
 void UActionComponent::RemoveTag_Implementation(FGameplayTag TagToRemove)
 {
-	ActiveGameplayTags.RemoveTag(TagToRemove);
+	RemoveActiveTag(TagToRemove);
 }
 
 void UActionComponent::ResetTags_Implementation()
