@@ -113,6 +113,11 @@ void UActionBase::OnGameplayTaskDeactivated(UGameplayTask& Task)
 	IGameplayTaskOwnerInterface::OnGameplayTaskDeactivated(Task);
 }
 
+bool UActionBase::IsInputPressed() const
+{
+	return bInputPressed;
+}
+
 bool UActionBase::IsRunning() const
 {
 	return RepData.bIsRunning;
@@ -122,7 +127,8 @@ bool UActionBase::CanStart_Implementation(AActor* Instigator)
 {
 	if (IsRunning())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Action Activation Failed: Already active."))
+		// UE_LOG(LogTemp, Warning, TEXT("Action Activation Failed: Already active."))
+		LastFailureReason = EFailureReason::AlreadyRunning;
 		return false;
 	}
 
@@ -130,7 +136,8 @@ bool UActionBase::CanStart_Implementation(AActor* Instigator)
 	{
 		if (!IsOffCooldown())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Action Activation Failed: On Cooldown."))
+			LastFailureReason = EFailureReason::OnCooldown;
+			// UE_LOG(LogTemp, Warning, TEXT("Action Activation Failed: On Cooldown."))
 			return false;
 		}
 	}
@@ -139,14 +146,44 @@ bool UActionBase::CanStart_Implementation(AActor* Instigator)
 	
 	if (Comp->ActiveGameplayTags.HasAny(BlockedTags))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Action Activation Failed: Blocked Tags."))
+		LastFailureReason = EFailureReason::TagBlocked;
+		// UE_LOG(LogTemp, Warning, TEXT("Action Activation Failed: Blocked Tags."))
 		return false;
 	}
 
 	return true;
 }
 
-void UActionBase::StartAction()
+void UActionBase::StartAction(bool SetInputPressed)
+{
+	UE_LOG(LogTemp, Log, TEXT("Started: %s"), *GetNameSafe(this));
+	//LogOnScreen(this, FString::Printf(TEXT("Started: %s"), *ActionName.ToString()), FColor::Green);
+
+	if (SetInputPressed)
+	{
+		bInputPressed = SetInputPressed;
+	}
+	
+	UActionComponent* Comp = GetOwningComponent();	
+	Comp->AddActiveTags(GrantsTags);
+
+	RepData.bIsRunning = true;
+	RepData.Instigator = GetOwner();
+
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		TimeStarted = GetWorld()->TimeSeconds;
+	}
+	if (CooldownPolicy == ECooldownMethod::AutoFromActivation)
+	{
+		CommitCooldown();
+	}
+
+	GetOwningComponent()->OnActionStarted.Broadcast(GetOwningComponent(), this);
+	OnActionStarted(GetOwner());
+}
+
+void UActionBase::StartActionWithInfo(FActionActivationInfo ActivationInfo)
 {
 	UE_LOG(LogTemp, Log, TEXT("Started: %s"), *GetNameSafe(this));
 	//LogOnScreen(this, FString::Printf(TEXT("Started: %s"), *ActionName.ToString()), FColor::Green);
@@ -167,7 +204,7 @@ void UActionBase::StartAction()
 	}
 
 	GetOwningComponent()->OnActionStarted.Broadcast(GetOwningComponent(), this);
-	OnActionStarted(GetOwner());
+	OnActionStartedWithInfo(GetOwner(), ActivationInfo);
 }
 
 void UActionBase::StopAction()
@@ -189,6 +226,7 @@ void UActionBase::StopAction()
 	}
 
 	GetOwningComponent()->OnActionStopped.Broadcast(GetOwningComponent(), this);
+	GetOwningComponent()->OnActionFinished.Broadcast(false);
 	OnActionStopped(GetOwner(), false);
 }
 
@@ -211,7 +249,20 @@ void UActionBase::CancelAction()
 	}
 
 	GetOwningComponent()->OnActionStopped.Broadcast(GetOwningComponent(), this);
+	GetOwningComponent()->OnActionFinished.Broadcast(true);
 	OnActionStopped(GetOwner(), true);
+}
+
+void UActionBase::InputReleased()
+{
+	bInputPressed = false;
+	OnInputReleased();
+}
+
+void UActionBase::InputPressed()
+{
+	bInputPressed = true;
+	OnInputPressed();
 }
 
 void UActionBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const

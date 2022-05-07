@@ -94,10 +94,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetStatValue(FGameplayTag Stat, float NewValue);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetStatValue(FGameplayTag Stat);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FStat GetStat(FGameplayTag Stat);
 
 protected:

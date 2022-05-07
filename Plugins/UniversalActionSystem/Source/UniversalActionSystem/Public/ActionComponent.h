@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ActionSystemTagsInterface.h"
 #include "GameplayTasksComponent.h"
 #include "GameplayTagContainer.h"
+#include "ActionTypes.h"
+#include "GameplayTagAssetInterface.h"
 #include "ActionComponent.generated.h"
 
 class UActionBase;
@@ -13,9 +14,11 @@ class UActionComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStateChanged, UActionComponent*, OwningComp, UActionBase*, Action);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActiveTagsChanged, FGameplayTag, ChangedTag);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStartFailed, UActionBase*, Action, EFailureReason, FailureReason);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionFinished, bool, bWasCanceled);
 
 UCLASS( ClassGroup=(ActionSystem), meta=(BlueprintSpawnableComponent) )
-class UNIVERSALACTIONSYSTEM_API UActionComponent : public UGameplayTasksComponent, public IActionSystemTagsInterface
+class UNIVERSALACTIONSYSTEM_API UActionComponent : public UGameplayTasksComponent, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -27,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tags")
 	FGameplayTagContainer ActiveGameplayTags;
 
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	bool StartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo);
+	
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void AddAction(AActor* Instigator, TSubclassOf<UActionBase> ActionClass);
 
@@ -44,10 +50,10 @@ public:
 	UActionBase* GetActionByClass(TSubclassOf<UActionBase> ActionClass) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
-	bool StartActionByClass(TSubclassOf<UActionBase> ActionClass);
+	bool StartActionByClass(TSubclassOf<UActionBase> ActionClass, bool SetInputPressed = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
-	bool StopActionByClass(TSubclassOf<UActionBase> ActionClass);
+	bool StopActionByClass(TSubclassOf<UActionBase> ActionClass, bool SetInputReleased);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool CancelActionByClass(TSubclassOf<UActionBase> ActionClass);
@@ -67,12 +73,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool CancelAllActions();
 
+
+	
+
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void SetActionsInhibited(bool bNewInhibited);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
 	bool GetActionsInhibited();
 
+
+	
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void ActionInputPressedByTag(FGameplayTag Tag);
@@ -107,28 +118,16 @@ public:
 	// Implement Custom Tags interface
 
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual FGameplayTagContainer GetOwnedGameplayTags_Implementation() override;
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
 
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual bool HasMatchingGameplayTags_Implementation(FGameplayTagContainer TagsToCheck) override;
+	virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual bool HasMatchingGameplayTag_Implementation(FGameplayTag Tag) override;
+	virtual bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override; 
 
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual void AppendTags_Implementation(FGameplayTagContainer TagsToAdd) override;
-
-	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual void AddTag_Implementation(FGameplayTag TagToAdd) override;
-
-	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual void RemoveTags_Implementation(FGameplayTagContainer TagsToRemove) override;
-
-	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual void RemoveTag_Implementation(FGameplayTag TagToRemove) override;
-
-	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable)
-	virtual void ResetTags_Implementation() override;
+	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 
 	/** Returns avatar actor to be used for a specific task, normally GetAvatarActor */
 	virtual AActor* GetGameplayTaskAvatar(const UGameplayTask* Task) const override;
@@ -136,10 +135,12 @@ public:
 protected:
 
 	bool bActionsInhibited = false;
-
-	// Called when the game starts
+	
 	UFUNCTION(Server, Reliable)
 	void ServerStartAction(FGameplayTag ActionTag);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerStartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo);
 
 	UFUNCTION(Server, Reliable)
 	void ServerStopAction(FGameplayTag ActionTag);
@@ -168,6 +169,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnActionStateChanged OnActionStopped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActionFinished OnActionFinished;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActionStartFailed OnActionFailed;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnActiveTagsChanged OnTagAdded;

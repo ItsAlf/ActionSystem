@@ -37,11 +37,16 @@ void UTask_ListenForTagChange::EndTask()
 
 void UTask_ListenForTagChange::TagAdded(const FGameplayTag Tag)
 {
-	OnTagAdded.Broadcast(Tag);
+	if (Tags.HasTag(Tag))
+	{
+		OnTagAdded.Broadcast(Tag);
+	}
 }
 
 void UTask_ListenForTagChange::TagRemoved(const FGameplayTag Tag)
-{
-	OnTagRemoved.Broadcast(Tag);
+{	if (Tags.HasTag(Tag))
+	{
+		OnTagRemoved.Broadcast(Tag);
+	}
 }
 

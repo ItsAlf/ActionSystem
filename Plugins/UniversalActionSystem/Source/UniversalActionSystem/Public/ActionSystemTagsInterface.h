@@ -35,16 +35,16 @@ public:
 
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable, BlueprintNativeEvent)
 	void AppendTags(FGameplayTagContainer TagsToAdd);
-
+	
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable, BlueprintNativeEvent)
 	void AddTag(FGameplayTag TagToAdd);
-
+	
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable, BlueprintNativeEvent)
 	void RemoveTags(FGameplayTagContainer TagsToRemove);
-
+	
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable, BlueprintNativeEvent)
 	void RemoveTag(FGameplayTag TagToRemove);
-
+	
 	UFUNCTION(Category="Action System | GameplayTags", BlueprintCallable, BlueprintNativeEvent)
 	void ResetTags();
 	

@@ -8,6 +8,7 @@
 #include "UObject/NoExportTypes.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTaskOwnerInterface.h"
+#include "ActionTypes.h"
 // #include "Kismet/KismetSystemLibrary.h"
 #include "ActionBase.generated.h"
 
@@ -130,6 +131,16 @@ public:
 	/* Start immediately when added to an action component */
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	bool bAutoStart;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
+	bool bUsesQueue = false;
+
+	/* Start immediately when added to an action component */
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
+	bool bInputPressed;
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	bool IsInputPressed() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	bool IsRunning() const;
@@ -137,14 +148,22 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")
 	bool CanStart(AActor* Instigator);
 
+	EFailureReason LastFailureReason = EFailureReason::AlreadyRunning;
+
 	UFUNCTION(Category = "Action")
-	void StartAction();
+	void StartAction(bool SetInputPressed = false);
+
+	UFUNCTION(Category = "Action")
+	void StartActionWithInfo(FActionActivationInfo ActivationInfo);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
 	void OnActionAdded();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
 	void OnActionStarted(AActor* Instigator);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
+	void OnActionStartedWithInfo(AActor* Instigator, FActionActivationInfo ActivationInfo);
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void StopAction();
@@ -154,10 +173,14 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
 	void OnActionStopped(AActor* Instigator, bool bWasCanceled = false);
+
+	void InputReleased();
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Action")
 	void OnInputReleased();
 
+	void InputPressed();
+	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Action")
 	void OnInputPressed();
 

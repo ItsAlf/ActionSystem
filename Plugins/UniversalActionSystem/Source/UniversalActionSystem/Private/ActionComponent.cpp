@@ -66,6 +66,42 @@ UActionBase* UActionComponent::GetActionByName(FName ActionName)
 	return nullptr;
 }
 
+bool UActionComponent::StartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo)
+{
+	SCOPE_CYCLE_COUNTER(STAT_StartActionByClass);
+
+	if (bActionsInhibited)
+	{
+		OnActionFailed.Broadcast(FindActionByTag(ActionTag), EFailureReason::Inhibited);
+		return false;
+	}
+
+	if (UActionBase* FoundAction = FindActionByTag(ActionTag))
+	{
+
+		if (!FoundAction->CanStart(GetOwner()))
+		{
+			OnActionFailed.Broadcast(FoundAction, FoundAction->LastFailureReason);
+			// FString FailedMsg = FString::Printf(TEXT("Failed to run: %s"), *GetNameSafe(FoundAction));
+			// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FailedMsg);
+			return false;
+		}
+		
+		// Is Client?
+		if (!GetOwner()->HasAuthority())
+		{
+			// UE_LOG(LogTemp, Warning, TEXT("Calling Server Action Start"))
+			ServerStartAction(FoundAction->ActionTag);
+		}
+		
+		// Bookmark for Unreal Insights
+		TRACE_BOOKMARK(TEXT("StartAction::%s"), FoundAction->ActionName);
+		FoundAction->StartActionWithInfo(ActivationInfo);
+		return true;
+	}
+	return false;
+}
+
 void UActionComponent::AddAction(AActor* Instigator, TSubclassOf<UActionBase> ActionClass)
 {
 	if (!ensure(ActionClass))
@@ -127,12 +163,13 @@ UActionBase* UActionComponent::GetActionByClass(TSubclassOf<UActionBase> ActionC
 	return nullptr;
 }
 
-bool UActionComponent::StartActionByClass(TSubclassOf<UActionBase> ActionClass)
+bool UActionComponent::StartActionByClass(TSubclassOf<UActionBase> ActionClass, bool SetInputPressed)
 {
 	SCOPE_CYCLE_COUNTER(STAT_StartActionByClass);
 
 	if (bActionsInhibited)
 	{
+		OnActionFailed.Broadcast(FindActionByClass(ActionClass), EFailureReason::Inhibited);
 		return false;
 	}
 
@@ -140,10 +177,15 @@ bool UActionComponent::StartActionByClass(TSubclassOf<UActionBase> ActionClass)
 	{
 		if (Action && Action->IsA(ActionClass))
 		{
+			if (SetInputPressed)
+			{
+				Action->InputPressed();
+			}
 			if (!Action->CanStart(GetOwner()))
 			{
-				FString FailedMsg = FString::Printf(TEXT("Failed to run: %s"), *GetNameSafe(Action));
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FailedMsg);
+				OnActionFailed.Broadcast(Action, Action->LastFailureReason);
+				// FString FailedMsg = FString::Printf(TEXT("Failed to run: %s"), *GetNameSafe(Action));
+				// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FailedMsg);
 				continue;
 			}
 
@@ -159,7 +201,7 @@ bool UActionComponent::StartActionByClass(TSubclassOf<UActionBase> ActionClass)
 			// Bookmark for Unreal Insights
 			TRACE_BOOKMARK(TEXT("StartAction::%s"), Action->ActionName);
 
-			Action->StartAction();
+			Action->StartAction(SetInputPressed);
 			return true;
 		}
 	}
@@ -173,6 +215,7 @@ bool UActionComponent::StartActionByTag(FGameplayTag ActionTag)
 
 	if (bActionsInhibited)
 	{
+		OnActionFailed.Broadcast(FindActionByTag(ActionTag), EFailureReason::Inhibited);
 		return false;
 	}
 	
@@ -182,8 +225,9 @@ bool UActionComponent::StartActionByTag(FGameplayTag ActionTag)
 		{
 			if (!Action->CanStart(GetOwner()))
 			{
-				FString FailedMsg = FString::Printf(TEXT("Failed to run: %s"), *ActionTag.ToString());
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FailedMsg);
+				OnActionFailed.Broadcast(Action, Action->LastFailureReason);
+				// FString FailedMsg = FString::Printf(TEXT("Failed to run: %s"), *ActionTag.ToString());
+				// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FailedMsg);
 				continue;
 			}
 
@@ -204,7 +248,7 @@ bool UActionComponent::StartActionByTag(FGameplayTag ActionTag)
 	return false;
 }
 
-bool UActionComponent::StopActionByClass(TSubclassOf<UActionBase> ActionClass)
+bool UActionComponent::StopActionByClass(TSubclassOf<UActionBase> ActionClass, bool SetInputReleased)
 {
 	for (UActionBase* Action : Actions)
 	{
@@ -217,7 +261,10 @@ bool UActionComponent::StopActionByClass(TSubclassOf<UActionBase> ActionClass)
 				{
 					ServerStopAction(Action->ActionTag);
 				}
-
+				if (SetInputReleased)
+				{
+					Action->InputReleased();
+				}
 				Action->StopAction();
 				return true;
 			}
@@ -240,7 +287,6 @@ bool UActionComponent::CancelActionByClass(TSubclassOf<UActionBase> ActionClass)
 				{
 					ServerCancelAction(Action->ActionTag);
 				}
-
 				Action->CancelAction();
 				return true;
 			}
@@ -336,7 +382,6 @@ bool UActionComponent::CancelAllActions()
 			{
 				ServerCancelAction(Action->ActionTag);
 			}
-
 			Action->CancelAction();
 			bCanceledAny =  true;
 		}
@@ -366,7 +411,7 @@ void UActionComponent::ActionInputReleasedByTag(FGameplayTag Tag)
 {
 	if (UActionBase* FoundAction = FindActionByTag(Tag))
 	{
-		FoundAction->OnInputReleased();
+		FoundAction->InputReleased();
 	}
 }
 
@@ -382,7 +427,7 @@ void UActionComponent::ActionInputReleasedByClass(TSubclassOf<UActionBase> Actio
 {
 	if (UActionBase* FoundAction = FindActionByClass(ActionClass))
 	{
-		FoundAction->OnInputReleased();
+		FoundAction->InputReleased();
 	}
 }
 
@@ -420,6 +465,13 @@ void UActionComponent::ServerStartAction_Implementation(FGameplayTag ActionTag)
 	StartActionByTag(ActionTag);
 }
 
+void UActionComponent::ServerStartActionWithInfo_Implementation(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Server Starting action with info..."))
+	StartActionWithInfo(ActionTag, ActivationInfo);
+}
+
+
 void UActionComponent::RemoveActiveTags(FGameplayTagContainer TagsToRemove)
 {
 	TArray<FGameplayTag> Tags;
@@ -431,49 +483,29 @@ void UActionComponent::RemoveActiveTags(FGameplayTagContainer TagsToRemove)
 	ActiveGameplayTags.RemoveTags(TagsToRemove);
 }
 
+void UActionComponent::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
+{
+	TagContainer = ActiveGameplayTags;
+}
+
+bool UActionComponent::HasAllMatchingGameplayTags(const FGameplayTagContainer& GameplayTags) const
+{
+	return ActiveGameplayTags.HasAll(GameplayTags);
+}
+
+bool UActionComponent::HasMatchingGameplayTag(FGameplayTag TagToCheck) const
+{
+	return ActiveGameplayTags.HasTag(TagToCheck);
+}
+
+bool UActionComponent::HasAnyMatchingGameplayTags(const FGameplayTagContainer& GameplayTags) const
+{
+	return ActiveGameplayTags.HasAny(GameplayTags);
+}
+
 void UActionComponent::ServerStopAction_Implementation(FGameplayTag ActionTag)
 {
 	StopActionByTag(ActionTag);
-}
-
-FGameplayTagContainer UActionComponent::GetOwnedGameplayTags_Implementation()
-{
-	return ActiveGameplayTags;
-}
-
-bool UActionComponent::HasMatchingGameplayTags_Implementation(FGameplayTagContainer TagsToCheck)
-{
-	return ActiveGameplayTags.HasAll(TagsToCheck);
-}
-
-bool UActionComponent::HasMatchingGameplayTag_Implementation(FGameplayTag Tag)
-{
-	return ActiveGameplayTags.HasTag(Tag);
-}
-
-void UActionComponent::AppendTags_Implementation(FGameplayTagContainer TagsToAdd)
-{
-	AddActiveTags(TagsToAdd);
-}
-
-void UActionComponent::AddTag_Implementation(FGameplayTag TagToAdd)
-{
-	AddActiveTag(TagToAdd);
-}
-
-void UActionComponent::RemoveTags_Implementation(FGameplayTagContainer TagsToRemove)
-{
-	ActiveGameplayTags.RemoveTags(TagsToRemove);
-}
-
-void UActionComponent::RemoveTag_Implementation(FGameplayTag TagToRemove)
-{
-	RemoveActiveTag(TagToRemove);
-}
-
-void UActionComponent::ResetTags_Implementation()
-{
-	ActiveGameplayTags.Reset();
 }
 
 AActor* UActionComponent::GetGameplayTaskAvatar(const UGameplayTask* Task) const

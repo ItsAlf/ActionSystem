@@ -15,6 +15,7 @@ UCLASS()
 class UNIVERSALACTIONSYSTEM_API UActionSystemFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
+public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Actions")
 	static UActionComponent* GetActionComponent(const AActor* Actor, bool bSearchIfNeeded = false);
@@ -29,6 +30,6 @@ class UNIVERSALACTIONSYSTEM_API UActionSystemFunctionLibrary : public UBlueprint
 	static bool RemoveAction(AActor* Actor, const TSubclassOf<UActionBase> Action);
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Actions")
-	FStat GetStatFromActor(AActor* Actor, FGameplayTag Stat);
+	static FStat GetStatFromActor(AActor* Actor, FGameplayTag Stat);
 	
 };
