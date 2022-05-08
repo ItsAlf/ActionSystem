@@ -82,7 +82,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStatChanged OnStatChanged;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated)
 	TArray<FStat> Stats;
 
 	UFUNCTION(BlueprintCallable)
@@ -93,6 +93,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void SetStatValue(FGameplayTag Stat, float NewValue);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void SetStatValue_Server(FGameplayTag Stat, float NewValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetStatValue(FGameplayTag Stat);

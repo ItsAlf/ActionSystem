@@ -571,5 +571,6 @@ void UActionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UActionComponent, Actions);
+	DOREPLIFETIME_CONDITION(UActionComponent, ActiveGameplayTags, COND_SkipOwner);
 }
 

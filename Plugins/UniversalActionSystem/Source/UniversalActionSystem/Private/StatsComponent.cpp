@@ -3,13 +3,15 @@
 
 #include "StatsComponent.h"
 
+#include "Net/UnrealNetwork.h"
+
 // Sets default values for this component's properties
 UStatsComponent::UStatsComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	SetIsReplicatedByDefault(true);
 	// ...
 }
 
@@ -50,11 +52,23 @@ FStat UStatsComponent::GetStat(FGameplayTag Stat)
 
 void UStatsComponent::SetStatValue(FGameplayTag Stat, float NewValue)
 {
-	if (Stats.Contains(Stat))
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		OnStatChanged.Broadcast(Stat, NewValue, Stats.FindByKey(Stat)->CurrentValue);
-		Stats.FindByKey(Stat)->CurrentValue = FMath::Clamp(NewValue, NewValue, Stats.FindByKey(Stat)->MaxValue);
+		if (Stats.Contains(Stat))
+		{
+			OnStatChanged.Broadcast(Stat, NewValue, Stats.FindByKey(Stat)->CurrentValue);
+			Stats.FindByKey(Stat)->CurrentValue = FMath::Clamp(NewValue, NewValue, Stats.FindByKey(Stat)->MaxValue);
+		}
 	}
+	else
+	{
+		SetStatValue_Server(Stat, NewValue);
+	}
+}
+
+void UStatsComponent::SetStatValue_Server_Implementation(FGameplayTag Stat, float NewValue)
+{
+	SetStatValue(Stat, NewValue);
 }
 
 // Called when the game starts
@@ -73,5 +87,12 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UStatsComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME_CONDITION(UStatsComponent, Stats, COND_None);
 }
 
