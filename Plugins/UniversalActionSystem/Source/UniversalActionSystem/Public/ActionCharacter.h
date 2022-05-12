@@ -5,19 +5,19 @@
 #include "CoreMinimal.h"
 #include "ActionSystemInterface.h"
 #include "GameFramework/Character.h"
-#include "TestCharacter.generated.h"
+#include "ActionCharacter.generated.h"
 
 class UStatsComponent;
 class UActionComponent;
 
 UCLASS()
-class UNIVERSALACTIONSYSTEM_API ATestCharacter : public ACharacter, public IActionSystemInterface
+class UNIVERSALACTIONSYSTEM_API AActionCharacter : public ACharacter, public IActionSystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
-	ATestCharacter();
+	AActionCharacter();
 
 	virtual class UActionComponent* GetActionSystemComponent() const override;
 	virtual class UStatsComponent* GetStatSystemComponent() const override;

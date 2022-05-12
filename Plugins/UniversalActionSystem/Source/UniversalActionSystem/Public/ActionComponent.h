@@ -30,6 +30,10 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Tags")
 	FGameplayTagContainer ActiveGameplayTags;
 
+	/* Granted abilities at game start */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Actions")
+	TArray<TSubclassOf<UActionBase>> DefaultActions;
+
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool StartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo);
 	
@@ -147,10 +151,6 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerCancelAction(FGameplayTag ActionTag);
-
-	/* Granted abilities at game start */
-	UPROPERTY(EditAnywhere, Category = "Actions")
-	TArray<TSubclassOf<UActionBase>> DefaultActions;
 
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	TArray<UActionBase*> Actions;
