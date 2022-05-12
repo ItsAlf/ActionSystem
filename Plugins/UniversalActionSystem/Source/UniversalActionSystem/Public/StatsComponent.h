@@ -7,6 +7,8 @@
 #include "GameplayTags.h"
 #include "StatsComponent.generated.h"
 
+class UStatEffect;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChanged, FGameplayTag, Stat, float, NewValue, float, OldValue);
 
 USTRUCT(BlueprintType)
@@ -19,6 +21,9 @@ struct FStat
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurrentValue;
+
+	UPROPERTY(BlueprintReadOnly)
+	float ModifierMagniude;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxValue;
@@ -79,6 +84,9 @@ public:
 	// Sets default values for this component's properties
 	UStatsComponent();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated)
+	FGameplayTagContainer TagImmunities;
+
 	UPROPERTY(BlueprintAssignable)
 	FOnStatChanged OnStatChanged;
 
@@ -98,14 +106,42 @@ public:
 	void SetStatValue_Server(FGameplayTag Stat, float NewValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float GetStatValue(FGameplayTag Stat);
+	float GetStatBaseValue(FGameplayTag Stat);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetStatCurrentValue(FGameplayTag Stat);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FStat GetStat(FGameplayTag Stat);
 
+	UFUNCTION(BlueprintCallable)
+	bool ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply);
+
+
+	UFUNCTION(BlueprintCallable)
+	bool RemoveStatEffect(TSubclassOf<UStatEffect> EffectToRemove);
+
+	void RecalculateModifiers();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+private:
+	UFUNCTION(Server, Reliable)
+	void ApplyStatEffect_Server(TSubclassOf<UStatEffect> EffectToApply);
+
+	UFUNCTION(Server, Reliable)
+	void RemoveStatEffect_Server(TSubclassOf<UStatEffect> EffectToRemove);
+	
+	UPROPERTY(ReplicatedUsing=OnRep_ActiveEffects)
+	TArray<UStatEffect*> ActiveEffects;
+
+	UFUNCTION()
+	void OnRep_ActiveEffects();
+	
+	UFUNCTION()
+	void EffectRemoved(UStatEffect* Effect);
 
 public:	
 	// Called every frame
