@@ -142,6 +142,9 @@ protected:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerStartAction(FGameplayTag ActionTag);
+
+	UFUNCTION(Server, Reliable)
+	void ServerStartActionByClass(TSubclassOf<UActionBase> ActionClass);
 	
 	UFUNCTION(Server, Reliable)
 	void ServerStartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo);

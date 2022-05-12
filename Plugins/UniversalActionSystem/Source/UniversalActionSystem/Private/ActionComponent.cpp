@@ -195,7 +195,7 @@ bool UActionComponent::StartActionByClass(TSubclassOf<UActionBase> ActionClass, 
 			if (!GetOwner()->HasAuthority())
 			{
 				// UE_LOG(LogTemp, Warning, TEXT("Calling Server Action Start"))
-				ServerStartAction(Action->ActionTag);
+				ServerStartActionByClass(ActionClass);
 			}
 
 			// Bookmark for Unreal Insights
@@ -511,6 +511,11 @@ void UActionComponent::ServerStopAction_Implementation(FGameplayTag ActionTag)
 AActor* UActionComponent::GetGameplayTaskAvatar(const UGameplayTask* Task) const
 {
 	return GetOwner();
+}
+
+void UActionComponent::ServerStartActionByClass_Implementation(TSubclassOf<UActionBase> ActionClass)
+{
+	StartActionByClass(ActionClass);
 }
 
 void UActionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
