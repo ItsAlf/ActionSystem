@@ -11,14 +11,14 @@ AActionCharacter::AActionCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ActionComp = CreateDefaultSubobject<UActionComponent>("ActionComp");
-	StatsComponent = CreateDefaultSubobject<UStatsComponent>("StatsComponent");
+	ActionComponent = CreateDefaultSubobject<UActionComponent>("Action Component");
+	StatsComponent = CreateDefaultSubobject<UStatsComponent>("Stats Component");
 
 }
 
 UActionComponent* AActionCharacter::GetActionSystemComponent() const
 {
-	return ActionComp;
+	return ActionComponent;
 }
 
 UStatsComponent* AActionCharacter::GetStatSystemComponent() const

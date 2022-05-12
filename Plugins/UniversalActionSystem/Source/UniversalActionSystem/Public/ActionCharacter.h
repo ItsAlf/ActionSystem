@@ -27,7 +27,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UActionComponent* ActionComp;
+	UActionComponent* ActionComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStatsComponent* StatsComponent;

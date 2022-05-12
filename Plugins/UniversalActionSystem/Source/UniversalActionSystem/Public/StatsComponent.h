@@ -75,7 +75,7 @@ struct FStat
 };
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(ActionSystem), meta=(BlueprintSpawnableComponent) )
 class UNIVERSALACTIONSYSTEM_API UStatsComponent : public UActorComponent
 {
 	GENERATED_BODY()
