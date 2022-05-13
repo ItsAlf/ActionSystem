@@ -204,5 +204,6 @@ void UStatEffect::OnPeriodicTick()
 		EffectRemoved();
 		return;
 	}
+	EffectTick(GetEffectTarget());
 	ApplyModifiers();
 }

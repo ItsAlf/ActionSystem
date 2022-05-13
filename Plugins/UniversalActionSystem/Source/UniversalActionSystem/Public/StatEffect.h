@@ -119,6 +119,9 @@ public:
 	void EffectApplied(AActor* Actor, bool Success);
 
 	UFUNCTION(BlueprintImplementableEvent)
+	void EffectTick(AActor* Actor);
+	
+	UFUNCTION(BlueprintImplementableEvent)
 	void EffectRemoved();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)

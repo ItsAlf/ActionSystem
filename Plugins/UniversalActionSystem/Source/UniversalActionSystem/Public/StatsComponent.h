@@ -10,6 +10,8 @@
 class UStatEffect;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChanged, FGameplayTag, Stat, float, NewValue, float, OldValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatEffectRemoved, UStatEffect*, Effect);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatEffectApplied, UStatEffect*, Effect);
 
 USTRUCT(BlueprintType)
 struct FStat
@@ -89,6 +91,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnStatChanged OnStatChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnStatEffectRemoved OnStatEffectRemoved;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnStatEffectApplied OnStatEffectApplied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated)
 	TArray<FStat> Stats;

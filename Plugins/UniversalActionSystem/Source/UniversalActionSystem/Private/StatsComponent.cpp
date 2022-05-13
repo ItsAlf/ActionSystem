@@ -100,6 +100,7 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 			RecalculateModifiers();
 			return true;
 		}
+		OnStatEffectApplied.Broadcast(NewEffect);
 	}
 	return false;
 }
@@ -166,6 +167,7 @@ void UStatsComponent::EffectRemoved(UStatEffect* Effect)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Removed Effect %s"), *Effect->GetName())
 		TagImmunities.RemoveTags(Effect->GrantedTagImmunities);
+		OnStatEffectRemoved.Broadcast(Effect);
 		ActiveEffects.Remove(Effect);
 	}
 	RecalculateModifiers();
