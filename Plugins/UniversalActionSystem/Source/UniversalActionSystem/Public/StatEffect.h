@@ -99,6 +99,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Period = 1.0f;
+
+	// 0 means infinite
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int MaxStacks = 0; 
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<FStatModifier> Modifiers;

@@ -62,10 +62,28 @@ FStat UStatsComponent::GetStat(FGameplayTag Stat)
 
 bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 {
+	// Fail if effect is not valid
 	if (!IsValid(EffectToApply))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Effect class was invalid"))
 		return false;
 	}
+
+	// Fail if this would apply more than max stacks
+	int MaxEffectStacks = EffectToApply.GetDefaultObject()->MaxStacks;
+	if (MaxEffectStacks < (GetEffectStacksByClass(EffectToApply) + 1) && !(MaxEffectStacks <= 0))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Effect blocked by MaxStacks"))
+		return false;
+	}
+
+	// fail if we are immune
+	if (TagImmunities.HasAnyExact(EffectToApply.GetDefaultObject()->EffectTags))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Effect blocked by immunity tags"))
+		return false;
+	}
+	
 	
 	UStatEffect* NewEffect = NewObject<UStatEffect>(this, EffectToApply);
 	
@@ -124,6 +142,19 @@ void UStatsComponent::RecalculateModifiers()
 	}
 }
 
+int UStatsComponent::GetEffectStacksByClass(TSubclassOf<UStatEffect> EffectClass)
+{
+	int NumStacks = 0;
+	for (UStatEffect* Effect : ActiveEffects)
+	{
+		if (Effect->IsA(EffectClass))
+		{
+			NumStacks++;
+		}
+	}
+	return NumStacks;
+}
+
 void UStatsComponent::OnRep_ActiveEffects()
 {
 	RecalculateModifiers();
@@ -134,6 +165,7 @@ void UStatsComponent::EffectRemoved(UStatEffect* Effect)
 	if (IsValid(Effect))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Removed Effect %s"), *Effect->GetName())
+		TagImmunities.RemoveTags(Effect->GrantedTagImmunities);
 		ActiveEffects.Remove(Effect);
 	}
 	RecalculateModifiers();

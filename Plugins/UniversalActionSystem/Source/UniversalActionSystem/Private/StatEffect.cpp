@@ -106,6 +106,7 @@ void UStatEffect::RemoveEffect()
 			EffectTimerHandle.Invalidate();
 		}
 	}
+	// TargetComponent->TagImmunities.RemoveTags(GrantedTagImmunities);
 	EffectRemoved();
 	OnEffectRemoved.Broadcast(this);
 }
