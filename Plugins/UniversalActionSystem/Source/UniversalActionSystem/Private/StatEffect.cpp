@@ -39,16 +39,60 @@ bool UStatEffect::ApplyModifiers()
 	return bAnySuccess;
 }
 
+float UStatEffect::GetRemainingDuration()
+{
+	return RemainingDuration;
+}
+
+int UStatEffect::GetCurrentStacks()
+{
+	return CurrentStacks;
+}
+
 float UStatEffect::GetModifierMagnitudeForStat(FGameplayTag Stat)
 {
 	if (ModifiersApplied.FindByKey(Stat))
 	{
 		float FoundMagnitude = CalculateModifierMagnitude(*ModifiersApplied.FindByKey(Stat));
 		UE_LOG(LogTemp, Warning, TEXT("Found Modifier: %f"), FoundMagnitude);
-		return FoundMagnitude;
+		return FoundMagnitude * CurrentStacks;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("GetModMag: Could not find stat, returning 0.0f"))
 	return 0.0f;
+}
+
+bool UStatEffect::AddStack()
+{
+	if ((CurrentStacks + 1) > MaxStacks)
+	{
+		if (StackOverflowResponse == EStackChangeRespone::ResetDuration)
+		{
+			RemainingDuration = Duration;
+		}
+		return false;
+	}
+	if (StackAddResponse == EStackChangeRespone::ResetDuration)
+	{
+		RemainingDuration = Duration;
+	}
+	CurrentStacks++;
+	StackAdded(CurrentStacks);
+	return true;
+}
+
+bool UStatEffect::RemoveStack()
+{
+	if ((CurrentStacks - 1) <= 0)
+	{
+		return false;
+	}
+	if (StackRemoveResponse == EStackChangeRespone::ResetDuration)
+	{
+		RemainingDuration = Duration;
+	}
+	CurrentStacks--;
+	StackRemoved(CurrentStacks);
+	return true;
 }
 
 AActor* UStatEffect::GetEffectTarget() const
@@ -166,7 +210,7 @@ void UStatEffect::BeginTick()
 {
 	if (DurationType == EDurationType::HasDuration)
 	{
-		GetWorld()->GetTimerManager().SetTimer(EffectTimerHandle, this, &UStatEffect::OnDurationFinished, Duration, false);
+		GetWorld()->GetTimerManager().SetTimer(EffectTimerHandle, this, &UStatEffect::OnDurationFinished, 0.1, true);
 	}
 	else if (DurationType == EDurationType::Periodic)
 	{
@@ -176,6 +220,22 @@ void UStatEffect::BeginTick()
 
 void UStatEffect::OnDurationFinished()
 {
+	RemainingDuration = RemainingDuration - 0.1f;
+	if (RemainingDuration > 0)
+	{
+		return;
+	}
+	CurrentStacks--;
+	if (CurrentStacks > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Stack Removed"))
+		if (StackRemoveResponse == EStackChangeRespone::ResetDuration)
+		{
+			RemainingDuration = Duration;
+		}
+		StackRemoved(CurrentStacks);
+		return;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("Effect Removed"))
 	EffectRemoved();
 	

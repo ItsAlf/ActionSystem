@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTags.h"
+#include "StatEffect.h"
 #include "StatsComponent.generated.h"
 
 class UStatEffect;
@@ -12,6 +13,7 @@ class UStatEffect;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChanged, FGameplayTag, Stat, float, NewValue, float, OldValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatEffectRemoved, UStatEffect*, Effect);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatEffectApplied, UStatEffect*, Effect);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatEffectStackChange, UStatEffect*, Effect, int, Stacks);
 
 USTRUCT(BlueprintType)
 struct FStat
@@ -98,6 +100,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStatEffectApplied OnStatEffectApplied;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnStatEffectStackChange OnEffectStackChange;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated)
 	TArray<FStat> Stats;
 
@@ -134,6 +139,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int GetEffectStacksByClass(TSubclassOf<UStatEffect> EffectClass);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UStatEffect* GetActiveEffectByClass(TSubclassOf<UStatEffect> EffectClass);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<UStatEffect*> GetActiveEffects();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -160,3 +171,15 @@ public:
 
 		
 };
+
+inline UStatEffect* UStatsComponent::GetActiveEffectByClass(TSubclassOf<UStatEffect> EffectClass)
+{
+	for (UStatEffect* Effect : ActiveEffects)
+	{
+		if (Effect->IsA(EffectClass))
+		{
+			return Effect;
+		}
+	}
+	return nullptr;
+}

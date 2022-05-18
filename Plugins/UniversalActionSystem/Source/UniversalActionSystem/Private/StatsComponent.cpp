@@ -70,11 +70,16 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 	}
 
 	// Fail if this would apply more than max stacks
-	int MaxEffectStacks = EffectToApply.GetDefaultObject()->MaxStacks;
-	if (MaxEffectStacks < (GetEffectStacksByClass(EffectToApply) + 1) && !(MaxEffectStacks <= 0))
+	if (UStatEffect* EffectToStack = GetActiveEffectByClass(EffectToApply))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Effect blocked by MaxStacks"))
-		return false;
+		UE_LOG(LogTemp, Warning, TEXT("Stacking effect..."))
+		bool bSuccess = false;
+		if (EffectToStack->AddStack())
+		{
+			OnEffectStackChange.Broadcast(EffectToStack, EffectToStack->CurrentStacks);
+			bSuccess = true;
+		}
+		return bSuccess;
 	}
 
 	// fail if we are immune
@@ -98,9 +103,9 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 			NewEffect->OnEffectRemoved.AddDynamic(this, &UStatsComponent::EffectRemoved);
 			ActiveEffects.Add(NewEffect);
 			RecalculateModifiers();
-			return true;
 		}
 		OnStatEffectApplied.Broadcast(NewEffect);
+		OnEffectStackChange.Broadcast(NewEffect, 1);
 	}
 	return false;
 }
@@ -179,8 +184,9 @@ void UStatsComponent::SetStatValue(FGameplayTag Stat, float NewValue)
 	{
 		if (Stats.Contains(Stat))
 		{
-			OnStatChanged.Broadcast(Stat, NewValue, Stats.FindByKey(Stat)->CurrentValue);
+			float OldValue = Stats.FindByKey(Stat)->CurrentValue;
 			Stats.FindByKey(Stat)->CurrentValue = FMath::Clamp(NewValue, NewValue, Stats.FindByKey(Stat)->MaxValue);
+			OnStatChanged.Broadcast(Stat, NewValue, OldValue);
 		}
 	}
 	else
@@ -205,6 +211,11 @@ void UStatsComponent::ApplyStatEffect_Server_Implementation(TSubclassOf<UStatEff
 	ApplyStatEffect(EffectToApply);
 }
 
+
+TArray<UStatEffect*> UStatsComponent::GetActiveEffects()
+{
+	return ActiveEffects;
+}
 
 // Called when the game starts
 void UStatsComponent::BeginPlay()

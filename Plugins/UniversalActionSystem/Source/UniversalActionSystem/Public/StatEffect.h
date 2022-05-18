@@ -30,6 +30,15 @@ enum EModifyMethod
 	Divide		UMETA(DisplayName="Divide")
 };
 
+UENUM(BlueprintType)
+enum EStackChangeRespone
+{
+	None			UMETA(DisplayName="None"),
+	ResetDuration	UMETA(DisplayName="Reset Duration"),
+};
+
+
+
 USTRUCT(BlueprintType)
 struct FStatModifier
 {
@@ -95,6 +104,15 @@ public:
 	TEnumAsByte<EDurationType> DurationType = EDurationType::HasDuration;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte<EStackChangeRespone> StackAddResponse = EStackChangeRespone::None;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte<EStackChangeRespone> StackRemoveResponse = EStackChangeRespone::None;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte<EStackChangeRespone> StackOverflowResponse = EStackChangeRespone::None;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Duration = 1.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -102,7 +120,14 @@ public:
 
 	// 0 means infinite
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	int MaxStacks = 0; 
+	int MaxStacks = 0;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetRemainingDuration();
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	int GetCurrentStacks();
+	int CurrentStacks = 1;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<FStatModifier> Modifiers;
@@ -117,6 +142,15 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void EffectApplied(AActor* Actor, bool Success);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void StackAdded(int Stacks);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void StackRemoved(int Stacks);
+	
+	bool AddStack();
+	bool RemoveStack();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void EffectTick(AActor* Actor);
