@@ -188,6 +188,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	FName ActionName;
 
+
+	// Cooldown Functions
+
+	UFUNCTION(BlueprintCallable, Category = "Action|Cooldown")
+	float GetCooldownTimeRemaining();
+
 	bool IsSupportedForNetworking() const override
 	{
 		return true;

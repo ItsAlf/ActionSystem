@@ -130,7 +130,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply);
 
-
 	UFUNCTION(BlueprintCallable)
 	bool RemoveStatEffect(TSubclassOf<UStatEffect> EffectToRemove);
 

@@ -69,24 +69,29 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 		return false;
 	}
 
-	// Fail if this would apply more than max stacks
-	if (UStatEffect* EffectToStack = GetActiveEffectByClass(EffectToApply))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Stacking effect..."))
-		bool bSuccess = false;
-		if (EffectToStack->AddStack())
-		{
-			OnEffectStackChange.Broadcast(EffectToStack, EffectToStack->CurrentStacks);
-			bSuccess = true;
-		}
-		return bSuccess;
-	}
-
 	// fail if we are immune
 	if (TagImmunities.HasAnyExact(EffectToApply.GetDefaultObject()->EffectTags))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Effect blocked by immunity tags"))
 		return false;
+	}
+
+	// Fail if this would apply more than max stacks
+	if (UStatEffect* EffectToStack = GetActiveEffectByClass(EffectToApply))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Stacking effect..."))
+		if (!GetOwner()->HasAuthority())
+		{
+			ApplyStatEffect_Server(EffectToApply);
+		}
+		bool bSuccess = false;
+		if (EffectToStack->AddStack())
+		{
+			OnEffectStackChange.Broadcast(EffectToStack, EffectToStack->CurrentStacks);
+			RecalculateModifiers();
+			bSuccess = true;
+		}
+		return bSuccess;
 	}
 	
 	
@@ -173,7 +178,6 @@ void UStatsComponent::EffectRemoved(UStatEffect* Effect)
 		UE_LOG(LogTemp, Warning, TEXT("Removed Effect %s"), *Effect->GetName())
 		TagImmunities.RemoveTags(Effect->GrantedTagImmunities);
 		OnStatEffectRemoved.Broadcast(Effect);
-		ActiveEffects.Remove(Effect);
 	}
 	RecalculateModifiers();
 }

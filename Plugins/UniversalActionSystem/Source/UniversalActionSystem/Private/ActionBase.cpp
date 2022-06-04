@@ -265,6 +265,11 @@ void UActionBase::InputPressed()
 	OnInputPressed();
 }
 
+float UActionBase::GetCooldownTimeRemaining()
+{
+	return Cooldown - GetTimeSinceCooldownCommit();
+}
+
 void UActionBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

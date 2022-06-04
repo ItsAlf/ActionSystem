@@ -2,11 +2,14 @@
 
 
 #include "ActionCharacter.h"
+
+#include "ActionCharacterMovement.h"
 #include "ActionComponent.h"
 #include "StatsComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
-AActionCharacter::AActionCharacter()
+AActionCharacter::AActionCharacter(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer.SetDefaultSubobjectClass<UActionCharacterMovement>(ACharacter::CharacterMovementComponentName))
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -24,6 +27,11 @@ UActionComponent* AActionCharacter::GetActionSystemComponent() const
 UStatsComponent* AActionCharacter::GetStatSystemComponent() const
 {
 	return StatsComponent;
+}
+
+float AActionCharacter::GetMovespeed_Implementation()
+{
+	return GetCharacterMovement()->MaxWalkSpeed;
 }
 
 // Called when the game starts or when spawned

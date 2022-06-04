@@ -21,7 +21,7 @@ bool UStatEffect::IsInstantiated() const
 	return !HasAllFlags(RF_ClassDefaultObject);
 }
 
-TArray<FStatModifier> UStatEffect::GetModifiers_Implementation()
+TArray<FStatModifier> UStatEffect::GetModifiers_Implementation(UStatsComponent* TargetStatsComponent)
 {
 	return Modifiers;
 }
@@ -111,7 +111,7 @@ bool UStatEffect::ApplyEffect(UStatsComponent* Component)
 		return false;
 	}
 	// Cache the applied modifiers so we're not unnecessarily calling the GetModifiers function.
-	ModifiersApplied = GetModifiers();
+	ModifiersApplied = GetModifiers(Component);
 	
 	RemainingDuration = Duration;
 	TargetComponent = Component;
@@ -151,6 +151,8 @@ void UStatEffect::RemoveEffect()
 		}
 	}
 	// TargetComponent->TagImmunities.RemoveTags(GrantedTagImmunities);
+	CurrentStacks = 0;
+	StackRemoved(0);
 	EffectRemoved();
 	OnEffectRemoved.Broadcast(this);
 }
@@ -202,6 +204,16 @@ float UStatEffect::CalculateModifierMagnitude(FStatModifier Modifier)
 		return ((OldValue / Modifier.Magnitude) - OldValue);
 	}
 	return 0.0f;
+}
+
+bool UStatEffect::IsSupportedForNetworking() const
+{
+	return true;
+}
+
+bool UStatEffect::IsNameStableForNetworking() const
+{
+	return true;
 }
 
 // Duration Functions;

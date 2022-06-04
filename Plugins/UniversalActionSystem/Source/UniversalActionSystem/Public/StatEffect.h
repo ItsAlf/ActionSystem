@@ -135,7 +135,7 @@ public:
 	TArray<FStatModifier> ModifiersApplied;
 
 	UFUNCTION(BlueprintNativeEvent)
-	TArray<FStatModifier> GetModifiers();
+	TArray<FStatModifier> GetModifiers(UStatsComponent* TargetStatsComponent);
 
 	UFUNCTION()
 	float GetModifierMagnitudeForStat(FGameplayTag Stat);
@@ -189,5 +189,9 @@ private:
 	float CalculateModifierMagnitude(FStatModifier Modifier);
 
 	TWeakObjectPtr<UStatsComponent> TargetComponent;
+
+	bool IsSupportedForNetworking() const override;
+
+	bool IsNameStableForNetworking() const override;
 	
 };

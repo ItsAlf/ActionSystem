@@ -17,10 +17,13 @@ class UNIVERSALACTIONSYSTEM_API AActionCharacter : public ACharacter, public IAc
 
 public:
 	// Sets default values for this character's properties
-	AActionCharacter();
+	AActionCharacter(const class FObjectInitializer& ObjectInitializer);
 
 	virtual class UActionComponent* GetActionSystemComponent() const override;
 	virtual class UStatsComponent* GetStatSystemComponent() const override;
+
+	UFUNCTION(BlueprintPure, BlueprintNativeEvent)
+	float GetMovespeed();
 
 protected:
 	// Called when the game starts or when spawned
