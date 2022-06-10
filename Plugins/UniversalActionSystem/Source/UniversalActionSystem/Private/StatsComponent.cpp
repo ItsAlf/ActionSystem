@@ -76,8 +76,10 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 		return false;
 	}
 
+	UStatEffect* EffectToStack = GetActiveEffectByClass(EffectToApply);
+	
 	// Fail if this would apply more than max stacks
-	if (UStatEffect* EffectToStack = GetActiveEffectByClass(EffectToApply))
+	if (IsValid(EffectToStack))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Stacking effect..."))
 		if (!GetOwner()->HasAuthority())

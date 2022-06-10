@@ -71,9 +71,14 @@ bool UStatEffect::AddStack()
 		}
 		return false;
 	}
-	if (StackAddResponse == EStackChangeRespone::ResetDuration)
+	if (StackAddResponse == EStackChangeRespone::ResetDuration || CurrentStacks == 0)
 	{
 		RemainingDuration = Duration;
+	}
+	if (DurationType == EDurationType::Infinite || DurationType == EDurationType::HasDuration)
+	{
+		BeginTick();
+		EffectApplied(GetEffectTarget(), true);
 	}
 	CurrentStacks++;
 	StackAdded(CurrentStacks);
