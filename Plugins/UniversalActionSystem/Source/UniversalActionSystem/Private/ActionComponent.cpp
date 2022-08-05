@@ -557,6 +557,12 @@ UActionBase* UActionComponent::FindActionByTag(FGameplayTag Tag)
 	return nullptr;
 }
 
+void UActionComponent::CallGameplayEvent(FGameplayTag EventTag)
+{
+	GameplayEvent.Broadcast(EventTag);
+}
+
+
 bool UActionComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
 	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);

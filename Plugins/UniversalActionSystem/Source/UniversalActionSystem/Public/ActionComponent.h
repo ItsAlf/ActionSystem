@@ -16,6 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStateChanged, UActionCompo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActiveTagsChanged, FGameplayTag, ChangedTag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStartFailed, UActionBase*, Action, EFailureReason, FailureReason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionFinished, bool, bWasCanceled);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameplayEvent, FGameplayTag, EventTag);
 
 UCLASS( ClassGroup=(ActionSystem), meta=(BlueprintSpawnableComponent) )
 class UNIVERSALACTIONSYSTEM_API UActionComponent : public UGameplayTasksComponent, public IGameplayTagAssetInterface
@@ -185,8 +186,12 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnActiveTagsChanged OnTagRemoved;
 
-	
+	UPROPERTY(BlueprintAssignable)
+	FOnGameplayEvent GameplayEvent;
 
+	UFUNCTION(BlueprintCallable)
+	void CallGameplayEvent(FGameplayTag EventTag);
+	
 	bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
