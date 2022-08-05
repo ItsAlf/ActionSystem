@@ -102,6 +102,29 @@ bool UActionComponent::StartActionWithInfo(FGameplayTag ActionTag, FActionActiva
 	return false;
 }
 
+bool UActionComponent::SwapActionIndices(int IndexFrom, int IndexTo)
+{
+	if (IndexFrom == IndexTo)
+	{
+		return true;
+	}
+	if (!Actions.IsValidIndex(IndexFrom))
+	{
+		return false;
+	}
+	if (!Actions.IsValidIndex(IndexTo))
+	{
+		return false;
+	}
+	Actions.Swap(IndexFrom, IndexTo);
+	return true;
+}
+
+TArray<UActionBase*> UActionComponent::GetActionsArray() const
+{
+	return Actions;
+}
+
 void UActionComponent::AddAction(AActor* Instigator, TSubclassOf<UActionBase> ActionClass)
 {
 	if (!ensure(ActionClass))
@@ -129,6 +152,23 @@ void UActionComponent::AddAction(AActor* Instigator, TSubclassOf<UActionBase> Ac
 			NewAction->StartAction();
 		}
 	}
+}
+
+void UActionComponent::RemoveAllActions()
+{
+	for (UActionBase* Action : Actions)
+	{
+		if (!IsValid(Action))
+		{
+			continue;
+		}
+		if (Action->IsRunning())
+		{
+			Action->CancelAction();
+		}
+	}
+	Actions.Empty();
+	DefaultActions.Empty();
 }
 
 void UActionComponent::RemoveAction(UActionBase* ActionToRemove)

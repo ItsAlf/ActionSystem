@@ -37,9 +37,20 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool StartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo);
+
+	/** Useful for ai prioritising actions. Dangerous in multiplayer! **/
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	bool SwapActionIndices(int IndexFrom = 0, int IndexTo = 0);
+	
+	/** Useful for ai prioritising actions. Dangerous in multiplayer! **/
+    UFUNCTION(BlueprintCallable, Category = "Actions", BlueprintPure)
+    TArray<UActionBase*> GetActionsArray() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void AddAction(AActor* Instigator, TSubclassOf<UActionBase> ActionClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void RemoveAllActions();
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void RemoveAction(UActionBase* ActionToRemove);
