@@ -24,6 +24,9 @@ UWorld* UActionBase::GetWorld() const
 	return GetOuter()->GetWorld();
 }
 
+
+
+
 bool UActionBase::IsInstantiated() const
 {
 	return !HasAllFlags(RF_ClassDefaultObject);
@@ -111,6 +114,11 @@ void UActionBase::OnGameplayTaskDeactivated(UGameplayTask& Task)
 {
 	ActiveTasks.Remove(&Task);
 	IGameplayTaskOwnerInterface::OnGameplayTaskDeactivated(Task);
+}
+
+bool UActionBase::ShouldTick() const
+{
+	return IsRunning() || bAllowTickWhenNotRunning;
 }
 
 bool UActionBase::IsInputPressed() const

@@ -32,6 +32,10 @@ bool UStatEffect::ApplyModifiers()
 	
 	for (FStatModifier CurrentModifier : ModifiersApplied)
 	{
+		if (!CurrentModifier.Stat.IsValid())
+		{
+			continue;
+		}
 		ApplyModifier(CurrentModifier);
 		bAnySuccess = true;
 	}
@@ -63,7 +67,8 @@ float UStatEffect::GetModifierMagnitudeForStat(FGameplayTag Stat)
 
 bool UStatEffect::AddStack()
 {
-	if ((CurrentStacks + 1) > MaxStacks)
+	int LastStackNum = CurrentStacks;
+	if ((CurrentStacks + 1) > MaxStacks && MaxStacks != 0)
 	{
 		if (StackOverflowResponse == EStackChangeRespone::ResetDuration)
 		{
@@ -82,6 +87,10 @@ bool UStatEffect::AddStack()
 	}
 	CurrentStacks++;
 	StackAdded(CurrentStacks);
+	if (LastStackNum <= 0)
+	{
+		EffectApplied(GetEffectTarget(), true);
+	}
 	return true;
 }
 
@@ -164,6 +173,10 @@ void UStatEffect::RemoveEffect()
 
 void UStatEffect::ApplyModifier(FStatModifier Modifier)
 {
+	if (!Modifier.Stat.IsValid())
+	{
+		return;
+	}
 	if (Modifier.Method == EModifyMethod::Add)
 	{
 		TargetComponent.Get()->ModifyStatAdditive(Modifier.Stat, Modifier.Magnitude);
@@ -198,14 +211,14 @@ float UStatEffect::CalculateModifierMagnitude(FStatModifier Modifier)
 	}
 	if (Modifier.Method == EModifyMethod::Multiply)
 	{
-		float OldValue = TargetComponent.Get()->GetStatCurrentValue(Modifier.Stat);
+		float OldValue = TargetComponent.Get()->GetStatBaseValue(Modifier.Stat);
 		float CalculatedValue = (OldValue * Modifier.Magnitude) - OldValue;
 		UE_LOG(LogTemp, Warning, TEXT("Calculating Multiply Modifier: (%f * %f) - %f = %f"), OldValue, Modifier.Magnitude, OldValue, CalculatedValue)
 		return CalculatedValue;
 	}
 	if (Modifier.Method == EModifyMethod::Divide)
 	{
-		float OldValue = TargetComponent.Get()->GetStatCurrentValue(Modifier.Stat);
+		float OldValue = TargetComponent.Get()->GetStatBaseValue(Modifier.Stat);
 		return ((OldValue / Modifier.Magnitude) - OldValue);
 	}
 	return 0.0f;
@@ -268,6 +281,17 @@ void UStatEffect::OnDurationFinished()
 void UStatEffect::OnPeriodicTick()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Effect Tick"))
+	if (!GetWorld())
+	{
+		EffectTimerHandle.Invalidate();
+		return;
+	}
+	if (!IsValid(GetEffectTarget()))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(EffectTimerHandle);
+		EffectTimerHandle.Invalidate();
+		return;
+	}
 	RemainingDuration = RemainingDuration - Period;
 	if (RemainingDuration <= 0.0f)
 	{

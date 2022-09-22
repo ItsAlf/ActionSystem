@@ -21,6 +21,8 @@ void UActionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetComponentTickEnabled(bCanTickActions);
+
 	// Server Only
 	if (GetOwner()->HasAuthority())
 	{
@@ -38,19 +40,34 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// Debug Tick Stuff
-	// 
-	//FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
-	//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, DebugMsg);
+	if (bCanTickActions)
+	{
+		for (UActionBase* CurrentAction : TickedActions)
+		{
+			if (CurrentAction->ShouldTick())
+			{
+				CurrentAction->OnActionTick(DeltaTime);
+			}
+		}
+	}
+	
+	 // Debug Tick Stuff
+	 
+	FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
+	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, DebugMsg);
+	
+	 // Draw All Actions
+	for (UActionBase* Action : Actions)
+	{
+ 		FColor TextColor = Action->IsRunning() ? FColor::Blue : FColor::White;
+ 		FString ActionMsg = FString::Printf(TEXT("[%s] Action: %s"), *GetNameSafe(GetOwner()), *GetNameSafe(Action));
+	
+	}
+}
 
-	// Draw All Actions
-	// 	for (UActionBase* Action : Actions)
-	// 	{
-	// 		FColor TextColor = Action->IsRunning() ? FColor::Blue : FColor::White;
-	// 		FString ActionMsg = FString::Printf(TEXT("[%s] Action: %s"), *GetNameSafe(GetOwner()), *GetNameSafe(Action));
-	// 
-	// 		LogOnScreen(this, ActionMsg, TextColor, 0.0f);
-	// 	}
+bool UActionComponent::GetShouldTick() const
+{
+	return Super::GetShouldTick() || bCanTickActions;
 }
 
 UActionBase* UActionComponent::GetActionByName(FName ActionName)
@@ -144,6 +161,11 @@ void UActionComponent::AddAction(AActor* Instigator, TSubclassOf<UActionBase> Ac
 	{
 		NewAction->Initialize(this);
 
+		if (NewAction->bShouldActionTick)
+		{
+			TickedActions.Add(NewAction);
+		}
+		
 		Actions.Add(NewAction);
 		NewAction->OnActionAdded();
 
@@ -168,6 +190,7 @@ void UActionComponent::RemoveAllActions()
 		}
 	}
 	Actions.Empty();
+	TickedActions.Empty();
 	DefaultActions.Empty();
 }
 
@@ -176,6 +199,11 @@ void UActionComponent::RemoveAction(UActionBase* ActionToRemove)
 	if (!ensure(ActionToRemove && !ActionToRemove->IsRunning()))
 	{
 		return;
+	}
+
+	if (ActionToRemove->bShouldActionTick)
+	{
+		TickedActions.Remove(ActionToRemove);
 	}
 
 	Actions.Remove(ActionToRemove);

@@ -24,7 +24,7 @@ class UNIVERSALACTIONSYSTEM_API UActionComponent : public UGameplayTasksComponen
 	GENERATED_BODY()
 
 public:
-
+	
 	// Sets default values for this component's properties
 	UActionComponent(const FObjectInitializer& ObjectInitializer);
 
@@ -34,6 +34,14 @@ public:
 	/* Granted abilities at game start */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Actions")
 	TArray<TSubclassOf<UActionBase>> DefaultActions;
+
+	// TICK STUFF
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Actions")
+	bool bCanTickActions = false;
+
+	virtual bool GetShouldTick() const override;
+
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool StartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo);
@@ -169,6 +177,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	TArray<UActionBase*> Actions;
+
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	TArray<UActionBase*> TickedActions;
 
 	virtual void BeginPlay() override;
 

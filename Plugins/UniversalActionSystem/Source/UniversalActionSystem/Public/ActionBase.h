@@ -117,6 +117,18 @@ public:
 
 	virtual UWorld* GetWorld() const override;
 
+	// Tick Stuff
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
+	bool bShouldActionTick = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
+	bool bAllowTickWhenNotRunning = false;
+
+	bool ShouldTick() const;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
+	void OnActionTick(float DeltaSeconds);
 	
 
 	/** True if this has been instanced, always true for blueprints */

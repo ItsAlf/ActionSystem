@@ -18,6 +18,10 @@ UStatsComponent::UStatsComponent()
 
 void UStatsComponent::ModifyStatAdditive(FGameplayTag Stat, float Value)
 {
+	if (!Stat.IsValid())
+	{
+		return;
+	}
 	if (Stats.Contains(Stat))
 	{
 		SetStatValue(Stat, GetStatBaseValue(Stat) + Value);
@@ -26,6 +30,10 @@ void UStatsComponent::ModifyStatAdditive(FGameplayTag Stat, float Value)
 
 void UStatsComponent::ModifyStatMultiplicative(FGameplayTag Stat, float Value)
 {
+	if (!Stat.IsValid())
+	{
+		return;
+	}
 	if (Stats.Contains(Stat))
 	{
 		SetStatValue(Stat, GetStatBaseValue(Stat) * Value);
@@ -34,6 +42,10 @@ void UStatsComponent::ModifyStatMultiplicative(FGameplayTag Stat, float Value)
 
 float UStatsComponent::GetStatBaseValue(FGameplayTag Stat)
 {
+	if (!Stat.IsValid())
+	{
+		return 0.0f;
+	}
 	if (Stats.Contains(Stat))
 	{
 		return Stats.FindByKey(Stat)->CurrentValue;
@@ -43,6 +55,10 @@ float UStatsComponent::GetStatBaseValue(FGameplayTag Stat)
 
 float UStatsComponent::GetStatCurrentValue(FGameplayTag Stat)
 {
+	if (!Stat.IsValid())
+	{
+		return 0.0f;
+	}
 	if (Stats.Contains(Stat))
 	{
 		FStat FoundStat = *Stats.FindByKey(Stat);
@@ -53,6 +69,10 @@ float UStatsComponent::GetStatCurrentValue(FGameplayTag Stat)
 
 FStat UStatsComponent::GetStat(FGameplayTag Stat)
 {
+	if (!Stat.IsValid())
+	{
+		return FStat();
+	}
 	if (Stats.Contains(Stat))
 	{
 		return *Stats.FindByKey(Stat);
