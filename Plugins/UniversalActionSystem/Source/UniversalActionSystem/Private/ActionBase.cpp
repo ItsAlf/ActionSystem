@@ -3,6 +3,7 @@
 
 #include "ActionBase.h"
 #include "ActionComponent.h"
+#include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
 #include "Tasks/ActionTask.h"
 
@@ -46,6 +47,14 @@ AActor* UActionBase::GetOwner() const
 	return GetOwningComponent()->GetOwner();
 }
 
+ACharacter* UActionBase::GetOwnerAsCharacter() const
+{
+	if (GetOwner())
+	{
+		return Cast<ACharacter>(GetOwner());
+	}
+	return nullptr;
+}
 
 
 // COOLDOWN

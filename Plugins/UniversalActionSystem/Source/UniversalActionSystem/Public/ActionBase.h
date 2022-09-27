@@ -64,6 +64,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	AActor* GetOwner() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	ACharacter* GetOwnerAsCharacter() const;
+
 	/* Tag Identifier for this action */
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTag ActionTag;
