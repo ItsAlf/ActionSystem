@@ -128,11 +128,12 @@ public:
 	FStat GetStat(FGameplayTag Stat);
 
 	UFUNCTION(BlueprintCallable)
-	bool ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply);
+	bool ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply, AActor* EffectCauser, APawn* EffectInstigator);
 
 	UFUNCTION(BlueprintCallable)
 	bool RemoveStatEffect(TSubclassOf<UStatEffect> EffectToRemove);
 
+	UFUNCTION()
 	void RecalculateModifiers();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -150,7 +151,7 @@ protected:
 
 private:
 	UFUNCTION(Server, Reliable)
-	void ApplyStatEffect_Server(TSubclassOf<UStatEffect> EffectToApply);
+	void ApplyStatEffect_Server(TSubclassOf<UStatEffect> EffectToApply, AActor* inEffectCauser, APawn* inEffectInstigator);
 
 	UFUNCTION(Server, Reliable)
 	void RemoveStatEffect_Server(TSubclassOf<UStatEffect> EffectToRemove);

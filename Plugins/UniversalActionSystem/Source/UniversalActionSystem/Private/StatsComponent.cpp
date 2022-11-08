@@ -36,7 +36,9 @@ void UStatsComponent::ModifyStatMultiplicative(FGameplayTag Stat, float Value)
 	}
 	if (Stats.Contains(Stat))
 	{
-		SetStatValue(Stat, GetStatBaseValue(Stat) * Value);
+		float CurrentValue = GetStatBaseValue(Stat);
+		float ModifyAmount = (CurrentValue * Value) - CurrentValue;
+		ModifyStatAdditive(Stat, ModifyAmount);
 	}
 }
 
@@ -80,7 +82,7 @@ FStat UStatsComponent::GetStat(FGameplayTag Stat)
 	return FStat();
 }
 
-bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
+bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply, AActor* EffectCauser, APawn* EffectInstigator)
 {
 	// Fail if effect is not valid
 	if (!IsValid(EffectToApply))
@@ -96,16 +98,19 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 		return false;
 	}
 
+	// find an existing effect to stack
 	UStatEffect* EffectToStack = GetActiveEffectByClass(EffectToApply);
-	
-	// Fail if this would apply more than max stacks
+
+	// if there is an existing effect, stack it.
 	if (IsValid(EffectToStack))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Stacking effect..."))
 		if (!GetOwner()->HasAuthority())
 		{
-			ApplyStatEffect_Server(EffectToApply);
+			ApplyStatEffect_Server(EffectToApply, EffectCauser, EffectInstigator);
 		}
+		
+		// Fail if this would apply more than max stacks
 		bool bSuccess = false;
 		if (EffectToStack->AddStack())
 		{
@@ -116,18 +121,19 @@ bool UStatsComponent::ApplyStatEffect(TSubclassOf<UStatEffect> EffectToApply)
 		return bSuccess;
 	}
 	
-	
+	// if the is no existing effect of that class, create a new one.
 	UStatEffect* NewEffect = NewObject<UStatEffect>(this, EffectToApply);
 	
-	if (NewEffect->ApplyEffect(this))
+	if (NewEffect->ApplyEffect(this, EffectCauser, EffectInstigator))
 	{
 		if (!GetOwner()->HasAuthority())
 		{
-			ApplyStatEffect_Server(EffectToApply);
+			ApplyStatEffect_Server(EffectToApply, EffectCauser, EffectInstigator);
 		}
 		if (NewEffect->DurationType == EDurationType::Infinite || NewEffect->DurationType == EDurationType::HasDuration)
 		{
 			NewEffect->OnEffectRemoved.AddDynamic(this, &UStatsComponent::EffectRemoved);
+			NewEffect->OnStackChange.AddDynamic(this, &UStatsComponent::RecalculateModifiers);
 			ActiveEffects.Add(NewEffect);
 			RecalculateModifiers();
 		}
@@ -166,9 +172,15 @@ void UStatsComponent::RecalculateModifiers()
 {
 	for (FStat CurrentStat : Stats)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("RecalculateModifiers: Searching for stat %s"), *CurrentStat.Stat.GetTagName().ToString())
 		CurrentStat.ModifierMagniude = 0.0f;
 		for (UStatEffect* CurrentEffect : ActiveEffects)
 		{
+			if (!CurrentEffect->ShouldApplyAsMagnitude())
+			{
+				// effect should not come into play here if it should not apply as a magnitude
+				continue;
+			}
 			CurrentStat.ModifierMagniude = CurrentStat.ModifierMagniude + CurrentEffect->GetModifierMagnitudeForStat(CurrentStat.Stat);
 		}
 		Stats.FindByKey(CurrentStat.Stat)->ModifierMagniude = CurrentStat.ModifierMagniude;
@@ -232,9 +244,9 @@ void UStatsComponent::RemoveStatEffect_Server_Implementation(TSubclassOf<UStatEf
 	RemoveStatEffect(EffectToRemove);
 }
 
-void UStatsComponent::ApplyStatEffect_Server_Implementation(TSubclassOf<UStatEffect> EffectToApply)
+void UStatsComponent::ApplyStatEffect_Server_Implementation(TSubclassOf<UStatEffect> EffectToApply, AActor* inEffectCauser, APawn* inEffectInstigator)
 {
-	ApplyStatEffect(EffectToApply);
+	ApplyStatEffect(EffectToApply, inEffectCauser, inEffectInstigator);
 }
 
 

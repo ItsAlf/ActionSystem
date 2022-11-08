@@ -176,6 +176,39 @@ void UActionComponent::AddAction(AActor* Instigator, TSubclassOf<UActionBase> Ac
 	}
 }
 
+void UActionComponent::AddActionAtIndex(TSubclassOf<UActionBase> ActionClass, int Index)
+{
+	if (!ensure(ActionClass))
+	{
+		return;
+	}
+
+	// Skip for clients
+	if (!GetOwner()->HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client attempting to AddAction. [Class: %s]"), *GetNameSafe(ActionClass));
+		return;
+	}
+
+	UActionBase* NewAction = NewObject<UActionBase>(GetOwner(), ActionClass);
+	if (ensure(NewAction))
+	{
+		NewAction->Initialize(this);
+
+		if (NewAction->bShouldActionTick)
+		{
+			TickedActions.Add(NewAction);
+		}
+		Actions.Insert(NewAction, Index);
+		NewAction->OnActionAdded();
+
+		if (NewAction->bAutoStart && ensure(NewAction->CanStart(GetOwner())))
+		{
+			NewAction->StartAction();
+		}
+	}
+}
+
 void UActionComponent::RemoveAllActions()
 {
 	for (UActionBase* Action : Actions)

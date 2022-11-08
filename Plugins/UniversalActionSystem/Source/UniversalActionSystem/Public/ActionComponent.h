@@ -58,6 +58,9 @@ public:
 	void AddAction(AActor* Instigator, TSubclassOf<UActionBase> ActionClass);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void AddActionAtIndex(TSubclassOf<UActionBase> ActionClass, int Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void RemoveAllActions();
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")

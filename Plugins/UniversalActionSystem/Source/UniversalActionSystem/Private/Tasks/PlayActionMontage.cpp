@@ -83,18 +83,6 @@ bool UPlayActionMontage::SetRootMotionScale(float NewScale)
 		return false;
 	}
 
-	if (!IsValid(MontageToPlay))
-	{
-		return false;
-	}
-
-	UAnimInstance* AnimInstance = MeshComponent->GetAnimInstance();
-
-	if (!IsValid(AnimInstance))
-	{
-		return false;
-	}
-
 	// Set the character for root motion scaling. scaling is not necessary, and so the task will not cancel if this fails.
 	ACharacter* Character = Cast<ACharacter>(MeshComponent->GetOwner());
 
@@ -103,9 +91,8 @@ bool UPlayActionMontage::SetRootMotionScale(float NewScale)
 		return false;
 	}
 
-	Character->SetAnimRootMotionTranslationScale(RootMotionScale);
+	Character->SetAnimRootMotionTranslationScale(NewScale);
 	return true;
-	
 }
 
 void UPlayActionMontage::EndTask()

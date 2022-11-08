@@ -226,6 +226,11 @@ void UActionBase::StartActionWithInfo(FActionActivationInfo ActivationInfo)
 
 void UActionBase::StopAction()
 {
+	// silently fail if we are not running
+	if (!IsRunning())
+	{
+		return;
+	}
 	UE_LOG(LogTemp, Log, TEXT("Stopped: %s"), *GetNameSafe(this));
 	// LogOnScreen(this, FString::Printf(TEXT("Stopped: %s"), *ActionName.ToString()), FColor::White);
 

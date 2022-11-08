@@ -11,6 +11,7 @@ class UStatsComponent;
 // class UStatEffect;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEffectRemoved, UStatEffect*, Effect);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEffectStackChange);
 
 UENUM(BlueprintType)
 enum EDurationType
@@ -94,6 +95,10 @@ public:
 	UPROPERTY()
 	FOnEffectRemoved OnEffectRemoved;
 
+	UPROPERTY()
+	FOnEffectStackChange OnStackChange;
+
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FGameplayTagContainer EffectTags;
 
@@ -162,14 +167,41 @@ public:
 	AActor* GetEffectTarget() const;
 
 	// Called by StatsComponent; initialized some values.
-	bool ApplyEffect(UStatsComponent* Component);
+	bool ApplyEffect(UStatsComponent* Component, AActor* inEffectCauser, APawn* inEffectInstigator);
 
 	void RemoveEffect();
-	
 
 	bool bWasInterrupted = false;
+
+	bool DoesEffectManageDuration() const;
+	bool DoesEffectAllowStacking() const;
+	bool IsInfinite() const;
+	bool IsPeriodic() const;
+	bool ShouldApplyAsMagnitude() const;
+	
+
+	float GetDuration() const;
+	bool ResetDuration();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	AActor* GetEffectCauser() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetEffectCauser(AActor* NewCauser);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	APawn* GetEffectInstigator() const;
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+    AController* GetEffectInstigatorController() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetEffectInstigator(APawn* NewInstigator);
 	
 private:
+
+	TWeakObjectPtr<AActor> EffectCauser;
+	TWeakObjectPtr<APawn> EffectInstigator;
 
 	UFUNCTION()
 	void OnDurationFinished();
