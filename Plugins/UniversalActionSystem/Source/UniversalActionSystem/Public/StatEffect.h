@@ -46,7 +46,7 @@ struct FStatModifier
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(Categories="Stat"))
 	FGameplayTag Stat;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -102,7 +102,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FGameplayTagContainer EffectTags;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(Categories="State"))
 	FGameplayTagContainer GrantedTagImmunities;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
