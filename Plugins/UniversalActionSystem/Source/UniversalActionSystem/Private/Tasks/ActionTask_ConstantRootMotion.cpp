@@ -35,7 +35,7 @@ UActionTask_ConstantRootMotion* UActionTask_ConstantRootMotion::ApplyRootMotionC
 	MyTask->MovementComponent = CharacterMovementComponent;
 	MyTask->WorldDirection = WorldDirection.GetSafeNormal();
 	MyTask->Strength = Strength;
-	MyTask->Duration = Duration;
+	MyTask->Duration = FMath::Max(Duration, KINDA_SMALL_NUMBER);;
 	MyTask->bIsAdditive = bIsAdditive;
 	MyTask->StrengthOverTime = StrengthOverTime;
 	MyTask->FinishVelocityMode = VelocityOnFinishMode;
@@ -60,7 +60,7 @@ void UActionTask_ConstantRootMotion::SharedInitAndApply()
 		ConstantForce->AccumulateMode = bIsAdditive ? ERootMotionAccumulateMode::Additive : ERootMotionAccumulateMode::Override;
 		ConstantForce->Priority = 5;
 		ConstantForce->Force = WorldDirection * Strength;
-		ConstantForce->Duration = Duration;
+		ConstantForce->Duration = FMath::Max(Duration, KINDA_SMALL_NUMBER);;
 		ConstantForce->StrengthOverTime = StrengthOverTime;
 		ConstantForce->FinishVelocityParams.Mode = FinishVelocityMode;
 		ConstantForce->FinishVelocityParams.SetVelocity = FinishSetVelocity;

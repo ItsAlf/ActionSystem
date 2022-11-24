@@ -103,7 +103,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStatEffectStackChange OnEffectStackChange;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, meta=(TitleProperty="Stat", Categories="Stat"))
 	TArray<FStat> Stats;
 
 	UFUNCTION(BlueprintCallable)

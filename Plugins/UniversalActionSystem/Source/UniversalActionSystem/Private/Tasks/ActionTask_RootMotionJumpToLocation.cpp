@@ -1,13 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Tasks/ActionTask_RootMotionJump.h"
+#include "Tasks/ActionTask_RootMotionJumpToLocation.h"
 #include "GameFramework/RootMotionSource.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ActionComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
-UActionTask_RootMotionJump::UActionTask_RootMotionJump(const FObjectInitializer& ObjectInitializer)
+UActionTask_RootMotionJumpToLocation::UActionTask_RootMotionJumpToLocation(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
 	PathOffsetCurve = nullptr;
@@ -15,15 +16,20 @@ UActionTask_RootMotionJump::UActionTask_RootMotionJump(const FObjectInitializer&
 	bHasLanded = false;
 }
 
-UActionTask_RootMotionJump* UActionTask_RootMotionJump::ApplyRootMotionJumpForce(UActionBase* OwningAction, UCharacterMovementComponent* CharacterMovementComponent, FName TaskInstanceName, FRotator Rotation, float Distance, float Height, float Duration, float MinimumLandedTriggerTime, bool bFinishOnLanded, ERootMotionFinishVelocityMode VelocityOnFinishMode, FVector SetVelocityOnFinish, float ClampVelocityOnFinish, UCurveVector* PathOffsetCurve, UCurveFloat* TimeMappingCurve)
+UActionTask_RootMotionJumpToLocation* UActionTask_RootMotionJumpToLocation::ApplyRootMotionJumpToLocationForce(UActionBase* OwningAction, UCharacterMovementComponent* CharacterMovementComponent, FName TaskInstanceName, FVector Location, float Duration, float MinimumLandedTriggerTime, bool bFinishOnLanded, ERootMotionFinishVelocityMode VelocityOnFinishMode, FVector SetVelocityOnFinish, float ClampVelocityOnFinish, UCurveVector* PathOffsetCurve, UCurveFloat* TimeMappingCurve)
 {
-	UActionTask_RootMotionJump* MyTask = NewActionTask<UActionTask_RootMotionJump>(OwningAction, TaskInstanceName);
-
+	UActionTask_RootMotionJumpToLocation* MyTask = NewActionTask<UActionTask_RootMotionJumpToLocation>(OwningAction, TaskInstanceName);
+	FVector OwnerLocation = CharacterMovementComponent->GetOwner()->GetActorLocation();
+	FRotator OwnerRotation = CharacterMovementComponent->GetOwner()->GetActorRotation();
+	
+	float distance = FMath::Max(UKismetMathLibrary::Distance2D(FVector2D(OwnerLocation), FVector2D(Location)), KINDA_SMALL_NUMBER);
+	float height = abs(Location.Z - OwnerLocation.Z);
+	float angle =  180 - ((height / distance)*360.0);
 	MyTask->ForceName = TaskInstanceName;
 	MyTask->MovementComponent = CharacterMovementComponent;
-	MyTask->Rotation = Rotation;
-	MyTask->Distance = Distance;
-	MyTask->Height = Height;
+	MyTask->Rotation = FRotator(OwnerRotation.Pitch, UKismetMathLibrary::FindLookAtRotation(CharacterMovementComponent->GetOwner()->GetActorLocation(), Location).Yaw, OwnerRotation.Roll);
+	MyTask->Distance = distance + height;
+	MyTask->Height = distance * 0.5;
 	MyTask->Duration = FMath::Max(Duration, KINDA_SMALL_NUMBER); // No zero duration
 	MyTask->MinimumLandedTriggerTime = MinimumLandedTriggerTime * Duration; // MinimumLandedTriggerTime is normalized
 	MyTask->bFinishOnLanded = bFinishOnLanded;
@@ -37,17 +43,17 @@ UActionTask_RootMotionJump* UActionTask_RootMotionJump::ApplyRootMotionJumpForce
 	return MyTask;
 }
 
-void UActionTask_RootMotionJump::Activate()
+void UActionTask_RootMotionJumpToLocation::Activate()
 {
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActor());
 	if (Character)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Bound to Avatar Actor Landed"))
-		Character->LandedDelegate.AddDynamic(this, &UActionTask_RootMotionJump::OnLandedCallback);
+		Character->LandedDelegate.AddDynamic(this, &UActionTask_RootMotionJumpToLocation::OnLandedCallback);
 	}
 }
 
-void UActionTask_RootMotionJump::OnLandedCallback(const FHitResult& Hit)
+void UActionTask_RootMotionJumpToLocation::OnLandedCallback(const FHitResult& Hit)
 {
 	bHasLanded = true;
 	UE_LOG(LogTemp, Warning, TEXT("Landed Attempt"))
@@ -59,7 +65,7 @@ void UActionTask_RootMotionJump::OnLandedCallback(const FHitResult& Hit)
 
 }
 
-void UActionTask_RootMotionJump::TriggerLanded()
+void UActionTask_RootMotionJumpToLocation::TriggerLanded()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Trigger Landed"))
 	if (ShouldBroadcastActionTaskDelegates())
@@ -73,7 +79,7 @@ void UActionTask_RootMotionJump::TriggerLanded()
 	}
 }
 
-void UActionTask_RootMotionJump::SharedInitAndApply()
+void UActionTask_RootMotionJumpToLocation::SharedInitAndApply()
 {
 	if (IsValid(MovementComponent))
 	{
@@ -100,11 +106,11 @@ void UActionTask_RootMotionJump::SharedInitAndApply()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UActionTask_RootMotionJump called in Action %s with null MovementComponent; Task Instance Name %s."), Action ? *Action->GetName() : TEXT("NULL"), *InstanceName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("UActionTask_RootMotionJumpToLocation called in Action %s with null MovementComponent; Task Instance Name %s."), Action ? *Action->GetName() : TEXT("NULL"), *InstanceName.ToString());
 	}
 }
 
-void UActionTask_RootMotionJump::Finish()
+void UActionTask_RootMotionJumpToLocation::Finish()
 {
 	bIsFinished = true;
 
@@ -124,7 +130,7 @@ void UActionTask_RootMotionJump::Finish()
 	EndTask();
 }
 
-void UActionTask_RootMotionJump::TickTask(float DeltaTime)
+void UActionTask_RootMotionJumpToLocation::TickTask(float DeltaTime)
 {
 	// UE_LOG(LogTemp, Warning, TEXT("RM Tick"))
 	if (bIsFinished)
@@ -160,17 +166,17 @@ void UActionTask_RootMotionJump::TickTask(float DeltaTime)
 	}
 }
 
-void UActionTask_RootMotionJump::PreDestroyFromReplication()
+void UActionTask_RootMotionJumpToLocation::PreDestroyFromReplication()
 {
 	Finish();
 }
 
-void UActionTask_RootMotionJump::OnDestroy(bool ActionIsEnding)
+void UActionTask_RootMotionJumpToLocation::OnDestroy(bool ActionIsEnding)
 {
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActor());
 	if (Character)
 	{
-		Character->LandedDelegate.RemoveDynamic(this, &UActionTask_RootMotionJump::OnLandedCallback);
+		Character->LandedDelegate.RemoveDynamic(this, &UActionTask_RootMotionJumpToLocation::OnLandedCallback);
 	}
 
 	if (MovementComponent)

@@ -12,6 +12,8 @@
 // #include "Kismet/KismetSystemLibrary.h"
 #include "ActionBase.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStopped, UActionBase*, Action, bool, bWasCanceled);
+
 class UWorld;
 class UActionComponent;
 class UGameplayTask;
@@ -68,15 +70,15 @@ protected:
 	ACharacter* GetOwnerAsCharacter() const;
 
 	/* Tag Identifier for this action */
-	UPROPERTY(EditDefaultsOnly, Category = "Tags")
+	UPROPERTY(EditDefaultsOnly, Category = "Tags", meta=(Categories="Action"))
 	FGameplayTag ActionTag;
 
 	/* Tags added to owning actor when activated, removed when action stops */
-	UPROPERTY(EditDefaultsOnly, Category = "Tags")
+	UPROPERTY(EditDefaultsOnly, Category = "Tags", meta=(Categories="State"))
 	FGameplayTagContainer GrantsTags;
 
 	/* Action can only start if OwningActor has none of these Tags applied */
-	UPROPERTY(EditDefaultsOnly, Category = "Tags")
+	UPROPERTY(EditDefaultsOnly, Category = "Tags", meta=(Categories="State"))
 	FGameplayTagContainer BlockedTags;
 
 	UPROPERTY(ReplicatedUsing="OnRep_RepData")
@@ -128,6 +130,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	bool bAllowTickWhenNotRunning = false;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnActionStopped ActionStopped;
+
 	bool ShouldTick() const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Action")
@@ -159,6 +164,15 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	bool IsRunning() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	FGameplayTag GetActionTag() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	FGameplayTagContainer GetGrantedTags() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	FGameplayTagContainer GetBlockedTags() const;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")
 	bool CanStart(AActor* Instigator);

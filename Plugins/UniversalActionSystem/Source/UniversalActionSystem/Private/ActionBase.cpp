@@ -140,6 +140,21 @@ bool UActionBase::IsRunning() const
 	return RepData.bIsRunning;
 }
 
+FGameplayTag UActionBase::GetActionTag() const
+{
+	return ActionTag;
+}
+
+FGameplayTagContainer UActionBase::GetGrantedTags() const
+{
+	return GrantsTags;
+}
+
+FGameplayTagContainer UActionBase::GetBlockedTags() const
+{
+	return BlockedTags;
+}
+
 bool UActionBase::CanStart_Implementation(AActor* Instigator)
 {
 	if (IsRunning())
@@ -250,6 +265,7 @@ void UActionBase::StopAction()
 	GetOwningComponent()->OnActionStopped.Broadcast(GetOwningComponent(), this);
 	GetOwningComponent()->OnActionFinished.Broadcast(false);
 	OnActionStopped(GetOwner(), false);
+	ActionStopped.Broadcast(this, false);
 }
 
 void UActionBase::CancelAction()
@@ -273,6 +289,7 @@ void UActionBase::CancelAction()
 	GetOwningComponent()->OnActionStopped.Broadcast(GetOwningComponent(), this);
 	GetOwningComponent()->OnActionFinished.Broadcast(true);
 	OnActionStopped(GetOwner(), true);
+	ActionStopped.Broadcast(this, true);
 }
 
 void UActionBase::InputReleased()

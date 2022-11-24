@@ -86,7 +86,7 @@ UActionBase* UActionComponent::GetActionByName(FName ActionName)
 bool UActionComponent::StartActionWithInfo(FGameplayTag ActionTag, FActionActivationInfo ActivationInfo)
 {
 	SCOPE_CYCLE_COUNTER(STAT_StartActionByClass);
-
+	
 	if (bActionsInhibited)
 	{
 		OnActionFailed.Broadcast(FindActionByTag(ActionTag), EFailureReason::Inhibited);
@@ -114,6 +114,7 @@ bool UActionComponent::StartActionWithInfo(FGameplayTag ActionTag, FActionActiva
 		// Bookmark for Unreal Insights
 		TRACE_BOOKMARK(TEXT("StartAction::%s"), FoundAction->ActionName);
 		FoundAction->StartActionWithInfo(ActivationInfo);
+		
 		return true;
 	}
 	return false;
@@ -229,9 +230,14 @@ void UActionComponent::RemoveAllActions()
 
 void UActionComponent::RemoveAction(UActionBase* ActionToRemove)
 {
-	if (!ensure(ActionToRemove && !ActionToRemove->IsRunning()))
+	if (!IsValid(ActionToRemove))
 	{
 		return;
+	}
+
+	if (ActionToRemove->IsRunning())
+	{
+		ActionToRemove->CancelAction();
 	}
 
 	if (ActionToRemove->bShouldActionTick)
@@ -244,11 +250,7 @@ void UActionComponent::RemoveAction(UActionBase* ActionToRemove)
 
 void UActionComponent::RemoveActionByClass(TSubclassOf<UActionBase> ActionToRemove)
 {
-	UActionBase* FoundAction = FindActionByClass(ActionToRemove);
-	if (IsValid(FoundAction))
-	{
-		RemoveAction(FoundAction);
-	}
+	RemoveAction(FindActionByClass(ActionToRemove));
 }
 
 UActionBase* UActionComponent::GetActionByClass(TSubclassOf<UActionBase> ActionClass) const

@@ -66,7 +66,7 @@ void UActionTask_RootMoveToLocation::SharedInitAndApply()
 			MoveToForce->Priority = 1000;
 			MoveToForce->TargetLocation = TargetLocation;
 			MoveToForce->StartLocation = StartLocation;
-			MoveToForce->Duration = Duration;
+			MoveToForce->Duration = FMath::Max(Duration, KINDA_SMALL_NUMBER);;
 			MoveToForce->bRestrictSpeedToExpected = bRestrictSpeedToExpected;
 			MoveToForce->PathOffsetCurve = PathOffsetCurve;
 			MoveToForce->FinishVelocityParams.Mode = FinishVelocityMode;
