@@ -80,6 +80,10 @@ protected:
 	/* Action can only start if OwningActor has none of these Tags applied */
 	UPROPERTY(EditDefaultsOnly, Category = "Tags", meta=(Categories="State"))
 	FGameplayTagContainer BlockedTags;
+	
+	/* Cancels Running actions with this tag */
+    UPROPERTY(EditDefaultsOnly, Category = "Tags")
+    FGameplayTagContainer CancelTags;
 
 	UPROPERTY(ReplicatedUsing="OnRep_RepData")
 	FActionRepData RepData;

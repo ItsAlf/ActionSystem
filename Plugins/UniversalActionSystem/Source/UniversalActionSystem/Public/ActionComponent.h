@@ -100,8 +100,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool CancelAllActions();
 
-
-	
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	TArray<UActionBase*> GetActionsWithTags(FGameplayTagContainer Tags);	
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void SetActionsInhibited(bool bNewInhibited);

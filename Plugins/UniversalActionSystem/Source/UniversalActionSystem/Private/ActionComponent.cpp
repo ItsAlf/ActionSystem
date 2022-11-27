@@ -253,6 +253,19 @@ void UActionComponent::RemoveActionByClass(TSubclassOf<UActionBase> ActionToRemo
 	RemoveAction(FindActionByClass(ActionToRemove));
 }
 
+TArray<UActionBase*> UActionComponent::GetActionsWithTags(FGameplayTagContainer Tags)
+{
+	TArray<UActionBase*> OutActions;
+	for (UActionBase* Action : Actions)
+	{
+		if (Action->ActionTag.IsValid() && Tags.HasTag(Action->ActionTag))
+		{
+			OutActions.Add(Action);
+		}
+	}
+	return OutActions;
+}
+
 UActionBase* UActionComponent::GetActionByClass(TSubclassOf<UActionBase> ActionClass) const
 {
 	for (UActionBase* Action : Actions)

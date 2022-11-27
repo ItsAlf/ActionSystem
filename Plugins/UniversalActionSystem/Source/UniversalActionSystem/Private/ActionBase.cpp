@@ -198,6 +198,7 @@ void UActionBase::StartAction(bool SetInputPressed)
 	
 	UActionComponent* Comp = GetOwningComponent();	
 	Comp->AddActiveTags(GrantsTags);
+	Comp->CancelActionsByTag(CancelTags);
 
 	RepData.bIsRunning = true;
 	RepData.Instigator = GetOwner();
@@ -211,7 +212,7 @@ void UActionBase::StartAction(bool SetInputPressed)
 		CommitCooldown();
 	}
 
-	GetOwningComponent()->OnActionStarted.Broadcast(GetOwningComponent(), this);
+	Comp->OnActionStarted.Broadcast(GetOwningComponent(), this);
 	OnActionStarted(GetOwner());
 }
 
