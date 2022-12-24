@@ -59,9 +59,10 @@ void UPlayActionMontage::PlayMontage()
 			AnimInstance->Montage_JumpToSection(StartSection, MontageToPlay);
 		}
 
+
 		BlendingOutDelegate.BindUObject(this, &UPlayActionMontage::OnMontageBlendingOut);
 		AnimInstance->Montage_SetBlendingOutDelegate(BlendingOutDelegate, MontageToPlay);
-
+		
 		MontageEndedDelegate.BindUObject(this, &UPlayActionMontage::OnMontageEnded);
 		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, MontageToPlay);
 
@@ -103,6 +104,15 @@ void UPlayActionMontage::EndTask()
 	MarkPendingKill();
 }
 
+void UPlayActionMontage::JumpToSection(FName Section)
+{
+	UAnimInstance* AnimInstance = MeshComponent->GetAnimInstance();
+	if (Section != NAME_None && IsValid(AnimInstance))
+	{
+		AnimInstance->Montage_JumpToSection(StartSection, MontageToPlay);
+	}
+}
+
 void UPlayActionMontage::OnMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (bInterrupted)
@@ -110,7 +120,6 @@ void UPlayActionMontage::OnMontageBlendingOut(UAnimMontage* Montage, bool bInter
 		OnInterrupted.Broadcast(NAME_None);
 	}
 	OnBlendOut.Broadcast(NAME_None);
-	EndTask();
 }
 
 void UPlayActionMontage::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)

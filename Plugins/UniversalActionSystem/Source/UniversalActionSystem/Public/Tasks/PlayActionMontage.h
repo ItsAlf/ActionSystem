@@ -37,7 +37,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category="Animation")
 	static UPlayActionMontage* PlayActionMontage(USkeletalMeshComponent* MeshComponent, UAnimMontage* MontageToPlay, float PlayRate = 1.0f, float StartingPosition = 0.0f, FName StartSection = NAME_None, float RootMotionScale = 1.0f);
-
+	
 	UFUNCTION()
 	void PlayMontage();
 
@@ -46,6 +46,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EndTask();
+
+	UFUNCTION(BlueprintCallable)
+	void JumpToSection(FName Section);
 	
 protected:
 	
@@ -66,7 +69,6 @@ private:
 	FOnMontageBlendingOutStarted BlendingOutDelegate;
 	FOnMontageEnded MontageEndedDelegate;
 	FDelegateHandle CancelledHandle;
-	FDelegateHandle EventHandle;
 
 	bool IsNotifyValid(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointNotifyPayload) const;
 	int32 MontageInstanceID;
